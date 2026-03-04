@@ -2,6 +2,24 @@
   "name": "asset-register",
   "version": "0.1.0",
   "private": true,
+  "description": "Asset Register - A modern asset management application",
+  "author": "PraiseTechzw (https://github.com/PraiseTechzw)",
+  "contributors": [
+    {
+      "name": "PraiseTechzw",
+      "url": "https://github.com/PraiseTechzw"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PraiseTechzw/asset-register.git"
+  },
+  "keywords": [
+    "asset-register",
+    "asset-management",
+    "nextjs"
+  ],
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
