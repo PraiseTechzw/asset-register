@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import db from "./db";
 import { NextRequest } from "next/server";
 
 export interface LogParams {
@@ -21,16 +21,19 @@ export async function logActivity({ action, entityType, entityId, userId, detail
             ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
         }
 
-        await prisma.auditLog.create({
-            data: {
-                action,
-                entityType,
-                entityId,
-                userId: userId || null,
-                details: JSON.stringify(details),
-                ipAddress,
-            },
-        });
+        db.prepare(`
+          INSERT INTO AuditLog (id, action, entityType, entityId, userId, details, ipAddress, timestamp)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+            crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)),
+            action,
+            entityType,
+            entityId,
+            userId || null,
+            JSON.stringify(details),
+            ipAddress,
+            new Date().toISOString()
+        );
     } catch (error) {
         console.error("Failed to write audit log:", error);
         // Do not throw, as logging should not break the main operation

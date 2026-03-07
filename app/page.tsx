@@ -2,23 +2,21 @@ import StatCard from '@/components/StatCard';
 import CampusOverview from '@/components/CampusOverview';
 import MissingAssetsPanel from '@/components/MissingAssetsPanel';
 import { Package, Laptop, AlertTriangle, CheckCircle } from 'lucide-react';
-import { prisma } from '@/lib/prisma';
+import db from '@/lib/db';
 
 export default async function Home() {
   // 1. Fetch Key Metrics
-  const valuations = await prisma.valuation.findMany();
+  const valuations = db.prepare('SELECT currentBookValue FROM Valuation').all() as { currentBookValue: number }[];
   const totalValue = valuations.reduce((acc, v) => acc + v.currentBookValue, 0);
 
-  const activeCount = await prisma.asset.count({ where: { status: 'ACTIVE' } });
+  const activeCount = (db.prepare("SELECT COUNT(*) as count FROM Asset WHERE status = 'ACTIVE'").get() as any).count;
 
-  const pendingAudits = await prisma.asset.count({
-    where: { OR: [{ status: 'MISSING' }, { condition: 'POOR' }] }
-  });
+  const pendingAudits = (db.prepare("SELECT COUNT(*) as count FROM Asset WHERE status = 'MISSING' OR condition = 'POOR'").get() as any).count;
 
-  const totalCount = await prisma.asset.count();
-  const verifiedCount = await prisma.asset.count({
-    where: { condition: { in: ['EXCELLENT', 'GOOD'] } }
-  });
+  const totalCount = (db.prepare("SELECT COUNT(*) as count FROM Asset").get() as any).count;
+
+  const verifiedCount = (db.prepare("SELECT COUNT(*) as count FROM Asset WHERE condition IN ('EXCELLENT', 'GOOD')").get() as any).count;
+
   const verifiedPercent = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 0;
 
   // 2. Format Value
@@ -30,13 +28,12 @@ export default async function Home() {
   }).format(totalValue);
 
   // 3. Fetch Department Stats
-  const dbDepartments = await prisma.department.findMany({
-    include: { assets: true }
-  });
+  const departments = db.prepare('SELECT * FROM Department').all() as any[];
 
-  const deptStats = dbDepartments.map(d => {
-    const total = d.assets.length;
-    const issues = d.assets.filter(a => a.status === 'MISSING' || a.condition === 'POOR' || a.condition === 'SCRAP').length;
+  const deptStats = departments.map(d => {
+    const assets = db.prepare('SELECT status, condition FROM Asset WHERE currentDepartmentId = ?').all(d.id) as any[];
+    const total = assets.length;
+    const issues = assets.filter(a => a.status === 'MISSING' || a.condition === 'POOR' || a.condition === 'SCRAP').length;
     return {
       name: d.name,
       assets: total,
@@ -45,12 +42,14 @@ export default async function Home() {
   });
 
   // 4. Fetch Missing Assets
-  const missingDbAssets = await prisma.asset.findMany({
-    where: { status: 'MISSING' },
-    include: { currentDepartment: true },
-    take: 5,
-    orderBy: { updatedAt: 'desc' }
-  });
+  const missingDbAssets = db.prepare(`
+    SELECT a.*, d.name as deptName 
+    FROM Asset a 
+    LEFT JOIN Department d ON a.currentDepartmentId = d.id 
+    WHERE a.status = 'MISSING' 
+    ORDER BY a.updatedAt DESC 
+    LIMIT 5
+  `).all() as any[];
 
   const missingAssets = missingDbAssets.map(a => {
     const updatedDate = new Date(a.updatedAt);
@@ -60,7 +59,7 @@ export default async function Home() {
     return {
       id: a.id,
       name: a.name,
-      dept: a.currentDepartment?.name || 'Unknown',
+      dept: a.deptName || 'Unknown',
       lastSeen: lastSeenText
     };
   });
