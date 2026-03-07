@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import { AlertCircle, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 export interface MissingAsset {
     id: string;
@@ -30,9 +31,9 @@ const MissingAssetsPanel: React.FC<MissingAssetsPanelProps> = ({ assets = [] }) 
                 </span>
             </div>
 
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar">
                 {assets.map((asset, i) => (
-                    <div key={asset.id} className="p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] group hover:border-rose-500/50 transition-colors cursor-pointer">
+                    <Link href={`/assets/${asset.id}`} key={asset.id} className="block p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] group hover:border-rose-500/50 transition-colors cursor-pointer">
                         <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium text-sm text-[var(--foreground)] group-hover:text-rose-400 transition-colors">{asset.name}</h4>
                             <span className="text-xs text-gray-500 font-mono">{asset.id}</span>
@@ -43,14 +44,14 @@ const MissingAssetsPanel: React.FC<MissingAssetsPanelProps> = ({ assets = [] }) 
                                 Last seen: {asset.lastSeen}
                             </span>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
 
-            <button className="mt-4 w-full py-3 flex items-center justify-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-300 transition-colors hover:bg-rose-500/10 rounded-xl border border-transparent hover:border-rose-500/20">
+            <Link href="/audits" className="mt-4 w-full py-3 flex items-center justify-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-300 transition-colors hover:bg-rose-500/10 rounded-xl border border-transparent hover:border-rose-500/20">
                 Initiate Search Protocol
                 <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
         </div>
     );
 };

@@ -73,10 +73,13 @@ export default async function Home() {
           <p className="text-gray-500 mt-1">Real-time valuation and condition overview for Zimbabwe Open University.</p>
         </div>
         <div className="flex gap-3">
-          <button className="px-4 py-2 bg-[var(--accent)] hover:bg-[#262626] border border-[var(--border)] rounded-lg text-sm font-medium transition-colors cursor-pointer text-[var(--foreground)]">
+          <a
+            href="/api/reports/export"
+            className="px-4 py-2 bg-[var(--accent)] hover:bg-[#262626] border border-[var(--border)] rounded-lg text-sm font-medium transition-colors cursor-pointer text-[var(--foreground)] flex items-center justify-center"
+          >
             Export Report
-          </button>
-          <Link href="/scanner" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-colors cursor-pointer">
+          </a>
+          <Link href="/scanner" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-colors cursor-pointer flex items-center justify-center">
             + Quick Audit
           </Link>
         </div>

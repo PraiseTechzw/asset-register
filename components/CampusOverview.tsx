@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 
 export interface DeptStat {
     name: string;
@@ -51,23 +52,22 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ stats = [] }) => {
                 <h3 className="font-semibold text-lg text-[var(--foreground)]">Campus Grid Heatmap</h3>
                 <div className="flex gap-4 text-xs font-medium text-gray-400">
                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Optimal</span>
-                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Pending Audits</span>
-                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Critical Issues</span>
+                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Pending</span>
+                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Critical</span>
                 </div>
             </div>
 
             <div className="flex-1 relative bg-[var(--background)] rounded-xl border border-[var(--border)] overflow-hidden">
-                {/* Abstract Grid background */}
                 <div className="absolute inset-0 opacity-20" style={{
                     backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)',
                     backgroundSize: '20px 20px'
                 }}></div>
 
-                {/* Zones */}
                 <div className="absolute inset-0 p-8">
                     <div className="relative w-full h-full">
                         {departments.map((dept) => (
-                            <div
+                            <Link
+                                href={`/assets?q=${dept.name}`}
                                 key={dept.id}
                                 className="absolute transition-all duration-300 cursor-pointer flex items-center justify-center p-2 rounded-lg backdrop-blur-sm"
                                 style={{
@@ -88,7 +88,6 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ stats = [] }) => {
                                     {dept.name}
                                 </div>
 
-                                {/* Tooltip */}
                                 {hoveredDept === dept.id && (
                                     <div className="absolute top-full mt-2 w-48 bg-[var(--background)] border border-[var(--border)] rounded-xl shadow-2xl p-4 z-50 animate-fade-in pointer-events-none text-left">
                                         <h4 className="font-bold text-[var(--foreground)] mb-2 truncate">{dept.name}</h4>
@@ -103,14 +102,33 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ stats = [] }) => {
                                                     {dept.issueRate}%
                                                 </span>
                                             </div>
+                                            <p className="text-[10px] text-blue-400 mt-2 font-bold">— Click to view assets</p>
                                         </div>
                                     </div>
                                 )}
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
             </div>
+
+            {/* Other Departments Fallback */}
+            {stats.length > uiDepartments.length && (
+                <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Other Locations</p>
+                    <div className="flex flex-wrap gap-2">
+                        {stats.filter(s => !uiDepartments.find(ui => ui.name === s.name)).map(s => (
+                            <Link
+                                href={`/assets?q=${s.name}`}
+                                key={s.name}
+                                className="px-2 py-1 bg-[var(--accent)] border border-[var(--border)] rounded-md text-[10px] text-gray-400 hover:text-white transition-colors"
+                            >
+                                {s.name} ({s.assets})
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
