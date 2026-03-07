@@ -42,3 +42,5 @@ next-env.d.ts
 autopilot.log
 .autopilot.pid
 .vscode/
+
+/app/generated/prisma
