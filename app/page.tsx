@@ -1,7 +1,11 @@
+import StatCard from '@/components/StatCard';
+import CampusOverview from '@/components/CampusOverview';
+import MissingAssetsPanel from '@/components/MissingAssetsPanel';
+import { Package, Laptop, AlertTriangle, CheckCircle } from 'lucide-react';
+import db from '@/lib/db';
 import Link from 'next/link';
 
 export default async function Home() {
-  // ... (rest of the logic remains same)
   // 1. Fetch Key Metrics
   const valuations = db.prepare('SELECT currentBookValue FROM Valuation').all() as { currentBookValue: number }[];
   const totalValue = valuations.reduce((acc, v) => acc + v.currentBookValue, 0);
@@ -72,9 +76,9 @@ export default async function Home() {
           <button className="px-4 py-2 bg-[var(--accent)] hover:bg-[#262626] border border-[var(--border)] rounded-lg text-sm font-medium transition-colors cursor-pointer text-[var(--foreground)]">
             Export Report
           </button>
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-colors cursor-pointer">
+          <Link href="/scanner" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-colors cursor-pointer">
             + Quick Audit
-          </button>
+          </Link>
         </div>
       </div>
 
