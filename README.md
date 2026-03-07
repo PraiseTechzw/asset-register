@@ -119,8 +119,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <div align="center">
 
-Built with ❤️ by **PraiseTechzw**
+Built with ❤️ by **PraiseTechzw & TafadzwaMac**
 
-[Support](mailto:support@example.com) · [Contact](https://github.com/PraiseTechzw)
+[Support](mailto:[EMAIL_ADDRESS]) · [Contact](https://github.com/PraiseTechzw)
 
 </div>
