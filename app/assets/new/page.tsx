@@ -29,7 +29,10 @@ export default function NewAssetPage() {
 
     useEffect(() => {
         // Fetch departments for dropdown
-        fetch("/api/assets/metadata")
+        const token = localStorage.getItem('token');
+        fetch("/api/assets/metadata", {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
             .then(res => res.json())
             .then(data => {
                 setMetadata({
@@ -44,9 +47,13 @@ export default function NewAssetPage() {
         setLoading(true);
 
         try {
+            const token = localStorage.getItem('token');
             const res = await fetch("/api/assets", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     ...formData,
                     purchasePrice: parseFloat(formData.purchasePrice),

@@ -45,9 +45,13 @@ export default function ScannerPage() {
 
     const processScan = async (code: string) => {
         try {
+            const token = localStorage.getItem('token');
             const res = await fetch("/api/scans", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     qrCodeHash: code,
                     latitude: location?.lat,
