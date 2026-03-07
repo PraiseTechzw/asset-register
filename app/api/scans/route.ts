@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import db from "@/lib/db";
 import { getUserFromRequest } from "@/lib/auth";
 import { logActivity } from "@/lib/logger";
 import { z } from "zod";
+import crypto from "crypto";
 
 const scanAssetSchema = z.object({
     qrCodeHash: z.string().min(1, "QR Code is required"),
@@ -27,12 +28,12 @@ export async function POST(req: NextRequest) {
 
         const { qrCodeHash, latitude, longitude, address } = result.data;
 
-        const asset = await prisma.asset.findUnique({
-            where: { qrCodeHash },
-            include: {
-                currentDepartment: true,
-            }
-        });
+        const asset = db.prepare(`
+            SELECT a.*, d.name as departmentName
+            FROM Asset a
+            LEFT JOIN Department d ON a.currentDepartmentId = d.id
+            WHERE a.qrCodeHash = ?
+        `).get(qrCodeHash) as any;
 
         if (!asset) {
             // Log failed scan attempt
@@ -50,15 +51,10 @@ export async function POST(req: NextRequest) {
 
         // Record the location if provided
         if (latitude && longitude) {
-            await prisma.assetLocation.create({
-                data: {
-                    assetId: asset.id,
-                    latitude,
-                    longitude,
-                    address,
-                    recordedById: user.userId,
-                }
-            });
+            db.prepare(`
+                INSERT INTO AssetLocation (id, assetId, latitude, longitude, address, recordedById)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `).run(crypto.randomUUID(), asset.id, latitude, longitude, address || null, user.userId);
         }
 
         // Log the successful scan verification
@@ -82,7 +78,7 @@ export async function POST(req: NextRequest) {
                 name: asset.name,
                 status: asset.status,
                 condition: asset.condition,
-                department: asset.currentDepartment?.name,
+                department: asset.departmentName,
             }
         }, { status: 200 });
 
