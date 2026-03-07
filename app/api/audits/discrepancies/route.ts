@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import db from "@/lib/db";
 import { getUserFromRequest, requireRole, ROLES } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -14,57 +14,37 @@ export async function GET(req: NextRequest) {
         // Find Date X days ago
         const thresholdDate = new Date();
         thresholdDate.setDate(thresholdDate.getDate() - daysUnscanned);
+        const thresholdISO = thresholdDate.toISOString();
 
         // 1. Find assets that have never been scanned or haven't been scanned recently
-        // An asset is considered "scanned" if there's an AssetLocation or AuditLog for QR_SCANNED.
-        // For simplicity, we can check the AuditLog for QR_SCANNED events related to the Asset.
-
-        // Using Prisma to find assets without recent scans.
-        // We can do this by finding AuditLogs for recent QR_SCANNED events, then excluding those Asset IDs.
-        const recentScans = await prisma.auditLog.findMany({
-            where: {
-                action: "QR_SCANNED",
-                entityType: "ASSET",
-                timestamp: { gte: thresholdDate }
-            },
-            select: { entityId: true }
-        });
-        const recentlyScannedAssetIds = recentScans.map(log => log.entityId);
-
-        const unscannedAssets = await prisma.asset.findMany({
-            where: {
-                status: "ACTIVE",
-                id: {
-                    notIn: recentlyScannedAssetIds
-                }
-            },
-            include: {
-                currentDepartment: true,
-            }
-        });
+        const unscannedAssets = db.prepare(`
+            SELECT a.*, d.name as departmentName
+            FROM Asset a
+            LEFT JOIN Department d ON a.currentDepartmentId = d.id
+            WHERE a.status = 'ACTIVE' 
+            AND a.id NOT IN (
+                SELECT entityId FROM AuditLog 
+                WHERE action = 'QR_SCANNED' 
+                AND entityType = 'ASSET' 
+                AND timestamp >= ?
+            )
+        `).all(thresholdISO) as any[];
 
         // 2. Find assets explicitly marked as MISSING
-        const missingAssets = await prisma.asset.findMany({
-            where: {
-                status: "MISSING",
-            },
-            include: {
-                currentDepartment: true,
-            }
-        });
+        const missingAssets = db.prepare(`
+            SELECT a.*, d.name as departmentName
+            FROM Asset a
+            LEFT JOIN Department d ON a.currentDepartmentId = d.id
+            WHERE a.status = 'MISSING'
+        `).all() as any[];
 
         // 3. Find assets in conditions POOR or SCRAP but still ACTIVE
-        const conditionDiscrepancies = await prisma.asset.findMany({
-            where: {
-                status: "ACTIVE",
-                condition: {
-                    in: ["POOR", "SCRAP"]
-                }
-            },
-            include: {
-                currentDepartment: true,
-            }
-        });
+        const conditionDiscrepancies = db.prepare(`
+            SELECT a.*, d.name as departmentName
+            FROM Asset a
+            LEFT JOIN Department d ON a.currentDepartmentId = d.id
+            WHERE a.status = 'ACTIVE' AND a.condition IN ('POOR', 'SCRAP')
+        `).all() as any[];
 
         return NextResponse.json({
             discrepancies: {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import db from "@/lib/db";
 import { getUserFromRequest, requireRole, ROLES } from "@/lib/auth";
 import { logActivity } from "@/lib/logger";
 import { z } from "zod";
@@ -12,9 +12,9 @@ const createAssetSchema = z.object({
     purchaseDate: z.string().datetime(),
     purchasePrice: z.number().min(0),
     currentDepartmentId: z.string().optional(),
-    condition: z.string().optional(), // EXCELLENT, GOOD, FAIR, POOR, SCRAP
-    valuationMethod: z.string().optional(), // STRAIGHT_LINE, REDUCING_BALANCE
-    valuationRate: z.number().optional() // Lifespan or percentage
+    condition: z.string().optional(),
+    valuationMethod: z.string().optional(),
+    valuationRate: z.number().optional()
 });
 
 export async function POST(req: NextRequest) {
@@ -32,31 +32,23 @@ export async function POST(req: NextRequest) {
 
         const data = result.data;
         const qrCodeHash = crypto.randomBytes(16).toString("hex");
+        const assetId = crypto.randomUUID();
 
-        const newAsset = await prisma.asset.create({
-            data: {
-                name: data.name,
-                description: data.description,
-                category: data.category,
-                purchaseDate: new Date(data.purchaseDate),
-                purchasePrice: data.purchasePrice,
-                currentDepartmentId: data.currentDepartmentId || null,
-                condition: data.condition || "GOOD",
-                qrCodeHash,
-                status: "ACTIVE",
-                valuation: {
-                    create: {
-                        method: data.valuationMethod || "STRAIGHT_LINE",
-                        rate: data.valuationRate || 5, // Default 5 years lifespan
-                        accumulatedDepreciation: 0,
-                        currentBookValue: data.purchasePrice
-                    }
-                }
-            },
-            include: {
-                valuation: true
-            }
+        const createAsset = db.transaction(() => {
+            db.prepare(`
+                INSERT INTO Asset (id, name, description, category, purchaseDate, purchasePrice, currentDepartmentId, condition, qrCodeHash, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
+            `).run(assetId, data.name, data.description || null, data.category, data.purchaseDate, data.purchasePrice, data.currentDepartmentId || null, data.condition || "GOOD", qrCodeHash);
+
+            db.prepare(`
+                INSERT INTO Valuation (id, assetId, method, rate, accumulatedDepreciation, currentBookValue)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `).run(crypto.randomUUID(), assetId, data.valuationMethod || "STRAIGHT_LINE", data.valuationRate || 5, 0, data.purchasePrice);
+
+            return db.prepare("SELECT * FROM Asset WHERE id = ?").get(assetId) as any;
         });
+
+        const newAsset = createAsset();
 
         await logActivity({
             action: "ASSET_CREATED",
@@ -86,24 +78,36 @@ export async function GET(req: NextRequest) {
         const status = searchParams.get("status");
         const category = searchParams.get("category");
 
-        const whereClause: any = {};
-        if (departmentId) whereClause.currentDepartmentId = departmentId;
-        if (status) whereClause.status = status;
-        if (category) whereClause.category = category;
+        let query = `
+            SELECT a.*, d.name as departmentName, v.method, v.currentBookValue 
+            FROM Asset a
+            LEFT JOIN Department d ON a.currentDepartmentId = d.id
+            LEFT JOIN Valuation v ON v.assetId = a.id
+            WHERE 1=1
+        `;
+        const params: any[] = [];
 
-        // If Dept Officer, optionally restrict to their department (enforced here or skipped if viewing is open)
-        if (user.role === ROLES.DEPT_OFFICER && user.departmentId) {
-            whereClause.currentDepartmentId = user.departmentId;
+        if (departmentId) {
+            query += " AND a.currentDepartmentId = ?";
+            params.push(departmentId);
+        }
+        if (status) {
+            query += " AND a.status = ?";
+            params.push(status);
+        }
+        if (category) {
+            query += " AND a.category = ?";
+            params.push(category);
         }
 
-        const assets = await prisma.asset.findMany({
-            where: whereClause,
-            include: {
-                currentDepartment: true,
-                valuation: true,
-            },
-            orderBy: { createdAt: 'desc' }
-        });
+        if (user.role === ROLES.DEPT_OFFICER && user.departmentId) {
+            query += " AND a.currentDepartmentId = ?";
+            params.push(user.departmentId);
+        }
+
+        query += " ORDER BY a.createdAt DESC";
+
+        const assets = db.prepare(query).all(...params);
 
         return NextResponse.json(assets, { status: 200 });
     } catch (error) {

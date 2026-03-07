@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import db from "@/lib/db";
 import { getUserFromRequest, requireRole, ROLES } from "@/lib/auth";
 import { logActivity } from "@/lib/logger";
 import { z } from "zod";
@@ -21,20 +21,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { id } = await params;
-        const asset = await prisma.asset.findUnique({
-            where: { id },
-            include: {
-                currentDepartment: true,
-                assignedUser: true,
-                valuation: true,
-                locations: {
-                    orderBy: { recordedAt: 'desc' },
-                    take: 5
-                }
-            }
-        });
+        const asset = db.prepare(`
+            SELECT a.*, d.name as departmentName, u.name as assignedUserName, v.method, v.rate, v.currentBookValue
+            FROM Asset a
+            LEFT JOIN Department d ON a.currentDepartmentId = d.id
+            LEFT JOIN User u ON a.assignedUserId = u.id
+            LEFT JOIN Valuation v ON v.assetId = a.id
+            WHERE a.id = ?
+        `).get(id) as any;
 
         if (!asset) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+
+        // Add dummy locations for now if needed or fetch them
+        const locations = db.prepare("SELECT * FROM AssetLocation WHERE assetId = ? ORDER BY recordedAt DESC LIMIT 5").all(id);
+        asset.locations = locations;
 
         // Check if DEPT_OFFICER can view
         if (user.role === ROLES.DEPT_OFFICER && asset.currentDepartmentId !== user.departmentId) {
@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         const { id } = await params;
 
         // Dept Officers can only update their own department's assets
-        const existingAsset = await prisma.asset.findUnique({ where: { id } });
+        const existingAsset = db.prepare("SELECT * FROM Asset WHERE id = ?").get(id) as any;
         if (!existingAsset) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
 
         if (user!.role === ROLES.DEPT_OFFICER && existingAsset.currentDepartmentId !== user!.departmentId) {
@@ -77,10 +77,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             delete updateData.currentDepartmentId; // Prevent direct transfer
         }
 
-        const updatedAsset = await prisma.asset.update({
-            where: { id },
-            data: updateData
-        });
+        // Build dynamic UPDATE
+        const keys = Object.keys(updateData).filter(k => (updateData as any)[k] !== undefined);
+        if (keys.length > 0) {
+            const setClause = keys.map(k => `${k} = ?`).join(", ");
+            const values = keys.map(k => (updateData as any)[k]);
+            db.prepare(`UPDATE Asset SET ${setClause}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`).run(...values, id);
+        }
+
+        const updatedAsset = db.prepare("SELECT * FROM Asset WHERE id = ?").get(id);
 
         await logActivity({
             action: "ASSET_UPDATED",
