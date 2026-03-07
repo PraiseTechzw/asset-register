@@ -1,8 +1,23 @@
 import Link from 'next/link';
 import db from '@/lib/db';
-import { Package, Search, Plus, Filter, ArrowUpDown, User } from 'lucide-react';
+import {
+    Package, Search, Plus, Filter, ArrowUpDown, User,
+    Laptop, Monitor, Wifi, Projector, Armchair, Car
+} from 'lucide-react';
 
 import AssetFilterBar from '@/components/AssetFilterBar';
+
+const getCategoryIcon = (category: string) => {
+    switch (category?.toLowerCase()) {
+        case 'laptop': return <Laptop className="w-5 h-5" />;
+        case 'desktop': return <Monitor className="w-5 h-5" />;
+        case 'network': return <Wifi className="w-5 h-5" />;
+        case 'projectors': return <Projector className="w-5 h-5" />;
+        case 'furniture': return <Armchair className="w-5 h-5" />;
+        case 'vehicles': return <Car className="w-5 h-5" />;
+        default: return <Package className="w-5 h-5" />;
+    }
+};
 
 export default async function AssetsPage({
     searchParams,
@@ -73,8 +88,8 @@ export default async function AssetsPage({
                                 <tr key={asset.id} className="hover:bg-[var(--accent)]/50 transition-colors group">
                                     <td className="px-6 py-4">
                                         <Link href={`/assets/${asset.id}`} className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-500">
-                                                <Package className="w-5 h-5" />
+                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                                                {getCategoryIcon(asset.category)}
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-[var(--foreground)] group-hover:text-blue-500 transition-colors">{asset.name}</p>
