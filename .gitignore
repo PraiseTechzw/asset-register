@@ -43,4 +43,7 @@ autopilot.log
 .autopilot.pid
 .vscode/
 
-/app/generated/prisma
+# local database
+local.db
+local.db-journal
+local.db-wal
