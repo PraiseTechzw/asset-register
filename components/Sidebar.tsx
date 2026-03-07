@@ -8,14 +8,14 @@ const Sidebar = () => {
     const pathname = usePathname();
 
     const isActive = (path: string) => {
-        if (path === '/' && pathname !== '/') return false;
+        if (path === '/') return pathname === '/';
         return pathname?.startsWith(path);
     };
 
     const linkStyle = (path: string) => `
         flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl transition-all group relative overflow-hidden
         ${isActive(path)
-            ? 'bg-blue-600/10 text-blue-500 shadow-[inset_0_0_20px_rgba(37,99,235,0.05)] border border-blue-500/20'
+            ? 'text-white bg-white/[0.04]'
             : 'hover:bg-white/[0.03] text-white/40 hover:text-white border border-transparent'}
     `;
 
@@ -69,8 +69,8 @@ const Sidebar = () => {
                     <span className="text-[10px] font-black text-white/30 tracking-[0.3em] uppercase">Operations</span>
                 </div>
 
-                <Link href="/scanner" className="flex items-center gap-3 px-5 py-4 text-xs font-black tracking-widest uppercase rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-[0_10px_20px_-5px_rgba(37,99,235,0.4)] transition-all border border-blue-400/20 active:scale-95 group">
-                    <ScanLine className="w-4 h-4 group-hover:animate-pulse" />
+                <Link href="/scanner" className="flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-all border border-blue-500/20 active:scale-95 group">
+                    <ScanLine className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     QR Scanner
                 </Link>
             </nav>
