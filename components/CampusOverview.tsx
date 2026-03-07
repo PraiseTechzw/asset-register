@@ -1,15 +1,37 @@
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useMemo } from 'react';
 
-const departments = [
-    { id: 'cs', name: 'Computer Science', assets: 450, issueRate: 2, x: 20, y: 30, width: 120, height: 80 },
-    { id: 'eng', name: 'Engineering', assets: 820, issueRate: 15, x: 160, y: 20, width: 140, height: 100 },
-    { id: 'admin', name: 'Administration', assets: 120, issueRate: 1, x: 50, y: 130, width: 100, height: 90 },
-    { id: 'lib', name: 'Library', assets: 340, issueRate: 5, x: 170, y: 140, width: 110, height: 80 },
-    { id: 'media', name: 'Media Studies', assets: 180, issueRate: 22, x: 300, y: 60, width: 90, height: 140 },
+export interface DeptStat {
+    name: string;
+    assets: number;
+    issueRate: number;
+}
+
+interface CampusOverviewProps {
+    stats?: DeptStat[];
+}
+
+const uiDepartments = [
+    { id: 'cs', name: 'Computer Science', x: 20, y: 30, width: 120, height: 80 },
+    { id: 'eng', name: 'Engineering', x: 160, y: 20, width: 140, height: 100 },
+    { id: 'admin', name: 'Administration', x: 50, y: 130, width: 100, height: 90 },
+    { id: 'lib', name: 'Library', x: 170, y: 140, width: 110, height: 80 },
+    { id: 'media', name: 'Media Studies', x: 300, y: 60, width: 90, height: 140 },
 ];
 
-const CampusOverview = () => {
+const CampusOverview: React.FC<CampusOverviewProps> = ({ stats = [] }) => {
     const [hoveredDept, setHoveredDept] = useState<string | null>(null);
+
+    const departments = useMemo(() => {
+        return uiDepartments.map(uiDept => {
+            const stat = stats.find(s => s.name === uiDept.name);
+            return {
+                ...uiDept,
+                assets: stat?.assets ?? 0,
+                issueRate: stat?.issueRate ?? 0
+            };
+        });
+    }, [stats]);
 
     const getStatusColor = (issueRate: number) => {
         if (issueRate > 10) return 'rgba(244, 63, 94, 0.4)'; // Rose

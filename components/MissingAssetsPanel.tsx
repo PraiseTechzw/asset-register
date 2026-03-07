@@ -1,13 +1,19 @@
+"use client";
 import React from 'react';
 import { AlertCircle, ArrowRight } from 'lucide-react';
 
-const missingAssets = [
-    { id: 'AST-2023-014', name: 'Dell XPS 15', dept: 'Computer Science', lastSeen: '2 weeks ago' },
-    { id: 'AST-2022-089', name: 'Canon DSLR Camera', dept: 'Media Studies', lastSeen: '1 month ago' },
-    { id: 'AST-2024-002', name: 'Epson Projector', dept: 'Room 304', lastSeen: '3 days ago' },
-];
+export interface MissingAsset {
+    id: string;
+    name: string;
+    dept: string;
+    lastSeen: string;
+}
 
-const MissingAssetsPanel = () => {
+interface MissingAssetsPanelProps {
+    assets?: MissingAsset[];
+}
+
+const MissingAssetsPanel: React.FC<MissingAssetsPanelProps> = ({ assets = [] }) => {
     return (
         <div className="glass-card rounded-2xl p-6 relative overflow-hidden h-full flex flex-col">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-amber-500"></div>
@@ -20,12 +26,12 @@ const MissingAssetsPanel = () => {
                     <h3 className="font-semibold text-lg text-[var(--foreground)]">Missing Assets</h3>
                 </div>
                 <span className="px-3 py-1 bg-rose-500/20 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">
-                    {missingAssets.length} Critical
+                    {assets.length} Critical
                 </span>
             </div>
 
             <div className="flex-1 space-y-3">
-                {missingAssets.map((asset, i) => (
+                {assets.map((asset, i) => (
                     <div key={asset.id} className="p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] group hover:border-rose-500/50 transition-colors cursor-pointer">
                         <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium text-sm text-[var(--foreground)] group-hover:text-rose-400 transition-colors">{asset.name}</h4>
