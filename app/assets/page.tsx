@@ -2,6 +2,8 @@ import Link from 'next/link';
 import db from '@/lib/db';
 import { Package, Search, Plus, Filter, ArrowUpDown } from 'lucide-react';
 
+import AssetFilterBar from '@/components/AssetFilterBar';
+
 export default async function AssetsPage({
     searchParams,
 }: {
@@ -34,7 +36,8 @@ export default async function AssetsPage({
     query += " ORDER BY a.createdAt DESC";
 
     const assets = db.prepare(query).all(...sqlParams) as any[];
-    const categories = db.prepare("SELECT DISTINCT category FROM Asset").all() as { category: string }[];
+    const categoryRows = db.prepare("SELECT DISTINCT category FROM Asset").all() as { category: string }[];
+    const categories = categoryRows.map(r => r.category);
 
     return (
         <div className="space-y-6">
@@ -48,33 +51,7 @@ export default async function AssetsPage({
                 </Link>
             </div>
 
-            {/* Filters */}
-            <div className="glass-card rounded-2xl p-4 flex flex-wrap gap-4 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search by name or ID..."
-                        className="w-full bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        defaultValue={q}
-                    />
-                </div>
-                <select className="bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2 px-4 text-sm focus:outline-none min-w-[140px]">
-                    <option value="">All Categories</option>
-                    {categories.map(c => (
-                        <option key={c.category} value={c.category}>{c.category}</option>
-                    ))}
-                </select>
-                <select className="bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2 px-4 text-sm focus:outline-none min-w-[140px]">
-                    <option value="">All Statuses</option>
-                    <option value="ACTIVE text-emerald-500">Active</option>
-                    <option value="MISSING text-rose-500">Missing</option>
-                    <option value="SCRAP text-gray-500">Scrap</option>
-                </select>
-                <button className="p-2 hover:bg-[var(--accent)] rounded-lg transition-colors border border-[var(--border)]">
-                    <Filter className="w-4 h-4 text-gray-400" />
-                </button>
-            </div>
+            <AssetFilterBar categories={categories} />
 
             {/* Assets Table */}
             <div className="glass-card rounded-2xl overflow-hidden border border-[var(--border)]">
@@ -115,12 +92,12 @@ export default async function AssetsPage({
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${asset.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                asset.status === 'MISSING' ? 'bg-rose-500/10 text-rose-500' :
-                                                    'bg-gray-500/10 text-gray-500'
+                                            asset.status === 'MISSING' ? 'bg-rose-500/10 text-rose-500' :
+                                                'bg-gray-500/10 text-gray-500'
                                             }`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${asset.status === 'ACTIVE' ? 'bg-emerald-500' :
-                                                    asset.status === 'MISSING' ? 'bg-rose-500' :
-                                                        'bg-gray-500'
+                                                asset.status === 'MISSING' ? 'bg-rose-500' :
+                                                    'bg-gray-500'
                                                 }`} />
                                             {asset.status}
                                         </span>

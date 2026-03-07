@@ -59,7 +59,7 @@ export default async function AuditsPage({
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 px-2">
                         <Calendar className="w-5 h-5 text-amber-500" />
-                        <h3 className="font-bold text-lg text-[var(--foreground)]">Unverified (>{days} days)</h3>
+                        <h3 className="font-bold text-lg text-[var(--foreground)]">Unverified ({'>'}{days} days)</h3>
                         <span className="ml-auto px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[10px] font-black rounded-md">{unscanned.length}</span>
                     </div>
                     <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
