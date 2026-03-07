@@ -58,12 +58,12 @@ export default async function AssetDetailPage({
     `).all(id) as any[];
 
     // Map movements to timeline format
-    const timelineEvents = movements.map(m => ({
+    const timelineEvents: Array<{ id: string; title: string; description: string; time: string; status: 'completed' | 'pending' | 'failed' | 'current' }> = movements.map(m => ({
         id: m.id,
         title: `Transfer ${m.status}`,
         description: `From ${m.fromDept || 'N/A'} to ${m.toDept}. Requested by ${m.requestedBy}`,
         time: new Date(m.createdAt).toLocaleDateString(),
-        status: m.status === 'APPROVED' ? 'completed' : m.status === 'PENDING' ? 'pending' : 'failed'
+        status: (m.status === 'APPROVED' ? 'completed' : m.status === 'PENDING' ? 'pending' : 'failed') as 'completed' | 'pending' | 'failed' | 'current'
     }));
 
     // Add creation event
