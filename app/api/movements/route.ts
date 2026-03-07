@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getUserFromRequest, requireRole, ROLES } from "@/lib/auth";
+import db from "@/lib/db";
+import { getUserFromRequest, ROLES } from "@/lib/auth";
 import { logActivity } from "@/lib/logger";
 import { z } from "zod";
+import crypto from "crypto";
 
 const createMovementSchema = z.object({
     assetId: z.string().min(1, "Asset ID is required"),
@@ -13,7 +14,6 @@ const createMovementSchema = z.object({
 export async function POST(req: NextRequest) {
     try {
         const user = await getUserFromRequest(req);
-        // Anyone except AUDITOR can initiate a transfer (e.g. DEPT_OFFICER, ASSET_CONTROLLER, SUPER_ADMIN)
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         if (user.role === ROLES.AUDITOR) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -26,8 +26,7 @@ export async function POST(req: NextRequest) {
 
         const { assetId, toDepartmentId, notes } = result.data;
 
-        // Verify Asset exists and user has permission to transfer it
-        const asset = await prisma.asset.findUnique({ where: { id: assetId } });
+        const asset = db.prepare("SELECT * FROM Asset WHERE id = ?").get(assetId) as any;
         if (!asset) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
 
         if (user.role === ROLES.DEPT_OFFICER && asset.currentDepartmentId !== user.departmentId) {
@@ -38,25 +37,21 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Asset is already in this department" }, { status: 400 });
         }
 
-        // Verify Destination Department exists
-        const toDepartment = await prisma.department.findUnique({ where: { id: toDepartmentId } });
+        const toDepartment = db.prepare("SELECT * FROM Department WHERE id = ?").get(toDepartmentId);
         if (!toDepartment) return NextResponse.json({ error: "Destination department not found" }, { status: 404 });
 
-        const movement = await prisma.assetMovement.create({
-            data: {
-                assetId,
-                fromDepartmentId: asset.currentDepartmentId,
-                toDepartmentId,
-                requestedById: user.userId,
-                status: "PENDING",
-                notes
-            }
-        });
+        const movementId = crypto.randomUUID();
+        db.prepare(`
+            INSERT INTO AssetMovement (id, assetId, fromDepartmentId, toDepartmentId, requestedById, status, notes)
+            VALUES (?, ?, ?, ?, ?, 'PENDING', ?)
+        `).run(movementId, assetId, asset.currentDepartmentId, toDepartmentId, user.userId, notes || null);
+
+        const movement = db.prepare("SELECT * FROM AssetMovement WHERE id = ?").get(movementId);
 
         await logActivity({
             action: "MOVEMENT_REQUESTED",
             entityType: "ASSET_MOVEMENT",
-            entityId: movement.id,
+            entityId: movementId,
             userId: user.userId,
             details: { assetId, from: asset.currentDepartmentId, to: toDepartmentId },
             req,
@@ -79,33 +74,36 @@ export async function GET(req: NextRequest) {
         const departmentId = searchParams.get("departmentId");
         const status = searchParams.get("status");
 
-        const whereClause: any = {};
-        if (status) whereClause.status = status;
+        let query = `
+            SELECT m.*, a.name as assetName, fd.name as fromDeptName, td.name as toDeptName,
+                   ru.name as requestedByName, ru.email as requestedByEmail,
+                   au.name as approvedByName, au.email as approvedByEmail
+            FROM AssetMovement m
+            JOIN Asset a ON m.assetId = a.id
+            LEFT JOIN Department fd ON m.fromDepartmentId = fd.id
+            JOIN Department td ON m.toDepartmentId = td.id
+            JOIN User ru ON m.requestedById = ru.id
+            LEFT JOIN User au ON m.approvedById = au.id
+            WHERE 1=1
+        `;
+        const params: any[] = [];
 
-        // DEPT_OFFICER only sees movements related to their department (from or to)
-        if (user.role === ROLES.DEPT_OFFICER && user.departmentId) {
-            whereClause.OR = [
-                { fromDepartmentId: user.departmentId },
-                { toDepartmentId: user.departmentId }
-            ];
-        } else if (departmentId) {
-            whereClause.OR = [
-                { fromDepartmentId: departmentId },
-                { toDepartmentId: departmentId }
-            ];
+        if (status) {
+            query += " AND m.status = ?";
+            params.push(status);
         }
 
-        const movements = await prisma.assetMovement.findMany({
-            where: whereClause,
-            include: {
-                asset: true,
-                fromDepartment: true,
-                toDepartment: true,
-                requestedBy: { select: { name: true, email: true } },
-                approvedBy: { select: { name: true, email: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+        if (user.role === ROLES.DEPT_OFFICER && user.departmentId) {
+            query += " AND (m.fromDepartmentId = ? OR m.toDepartmentId = ?)";
+            params.push(user.departmentId, user.departmentId);
+        } else if (departmentId) {
+            query += " AND (m.fromDepartmentId = ? OR m.toDepartmentId = ?)";
+            params.push(departmentId, departmentId);
+        }
+
+        query += " ORDER BY m.createdAt DESC";
+
+        const movements = db.prepare(query).all(...params);
 
         return NextResponse.json(movements, { status: 200 });
 
