@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-in-production";
 
@@ -59,11 +59,13 @@ export async function getUserFromRequest(req: NextRequest) {
  */
 export function requireRole(payload: JwtPayload | null, allowedRoles: string[]) {
     if (!payload) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+        console.warn("requireRole: No payload (Unauthorized)");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (!allowedRoles.includes(payload.role)) {
-        return new Response(JSON.stringify({ error: "Forbidden: Insufficient permissions" }), { status: 403 });
+        console.warn(`requireRole: Role ${payload.role} not in ${allowedRoles}`);
+        return NextResponse.json({ error: "Forbidden: Insufficient permissions" }, { status: 403 });
     }
 
     return null;

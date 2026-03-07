@@ -30,7 +30,7 @@ const TopHeader = () => {
                     setNotifs(data.notifications);
                 } else if (res.status === 401) {
                     localStorage.removeItem('token');
-                    // router.push('/login'); // We'll enable this once login page is ready
+                    router.push('/login');
                 }
             } catch (err) {
                 console.error("Failed to fetch user data", err);

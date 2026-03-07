@@ -28,8 +28,13 @@ export default function NewAssetPage() {
     });
 
     useEffect(() => {
-        // Fetch departments for dropdown
         const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/login');
+            return;
+        }
+
+        // Fetch departments for dropdown
         fetch("/api/assets/metadata", {
             headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -40,7 +45,7 @@ export default function NewAssetPage() {
                 });
             })
             .catch(err => console.error("Failed to load metadata", err));
-    }, []);
+    }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
