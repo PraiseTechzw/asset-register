@@ -1,11 +1,15 @@
 "use client";
 
-import { Bell, Search, UserCircle, LogOut, Package, Truck, AlertTriangle } from 'lucide-react';
+import { Bell, Search, UserCircle, LogOut, Package, Truck, AlertTriangle, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
-const TopHeader = () => {
+interface TopHeaderProps {
+    onMenuToggle?: () => void;
+}
+
+const TopHeader = ({ onMenuToggle }: TopHeaderProps) => {
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [user, setUser] = useState<any>(null);
@@ -66,17 +70,27 @@ const TopHeader = () => {
     };
 
     return (
-        <header className="h-16 border-b border-[var(--border)] bg-[var(--background)] flex items-center justify-between px-6 sticky top-0 z-30 glass-panel">
-            <form onSubmit={handleSearch} className="flex items-center w-96 relative">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3" />
-                <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search ID, Name, Dept..."
-                    className="w-full pl-10 pr-4 py-2 bg-[var(--accent)] text-sm rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all text-[var(--foreground)]"
-                />
-            </form>
+        <header className="h-16 border-b border-[var(--border)] bg-[var(--background)] flex items-center justify-between px-4 md:px-6 sticky top-0 z-30 glass-panel flex-shrink-0">
+            <div className="flex items-center gap-3">
+                {/* Mobile hamburger */}
+                <button
+                    onClick={onMenuToggle}
+                    className="lg:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                    aria-label="Open sidebar"
+                >
+                    <Menu className="w-5 h-5" />
+                </button>
+                <form onSubmit={handleSearch} className="flex items-center w-48 sm:w-72 md:w-96 relative">
+                    <Search className="w-4 h-4 text-gray-400 absolute left-3" />
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search items, QR codes, departments..."
+                        className="w-full pl-10 pr-4 py-2 bg-[var(--accent)] text-sm rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all text-[var(--foreground)] placeholder:text-xs"
+                    />
+                </form>
+            </div>
 
             <div className="flex items-center gap-4">
                 {/* Notifications */}
