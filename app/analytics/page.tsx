@@ -1,7 +1,7 @@
 import db from '@/lib/db';
 import { Package, TrendingDown, ArrowUpRight, AlertOctagon } from 'lucide-react';
 import StatCard from '@/components/StatCard';
-import AnalyticsCharts from '@/components/AnalyticsCharts';
+import { DepreciationArea, ReplacementBar } from '@/components/AnalyticsCharts';
 
 export default async function AnalyticsPage() {
     // 1. Current Total Value (Sum of Current Book Values)
@@ -65,7 +65,7 @@ export default async function AnalyticsPage() {
                 <div className="glass-card rounded-2xl p-6 h-[400px] flex flex-col border border-[var(--border)] bg-[var(--background)]">
                     <h3 className="font-semibold text-lg text-[var(--foreground)] mb-6">Aggregate Depreciation Projection</h3>
                     <div className="flex-1 w-full relative">
-                        <AnalyticsCharts.DepreciationArea data={depreciationData} />
+                        <DepreciationArea data={depreciationData} />
                     </div>
                 </div>
 
@@ -77,7 +77,7 @@ export default async function AnalyticsPage() {
                         </span>
                     </div>
                     <div className="flex-1 w-full">
-                        <AnalyticsCharts.ReplacementBar data={replacementList} />
+                        <ReplacementBar data={replacementList} />
                     </div>
                 </div>
             </div>

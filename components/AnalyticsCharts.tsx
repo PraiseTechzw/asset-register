@@ -38,5 +38,4 @@ export const ReplacementBar = ({ data }: { data: any[] }) => (
     </ResponsiveContainer>
 );
 
-const AnalyticsCharts = { DepreciationArea, ReplacementBar };
-export default AnalyticsCharts;
+// No default export of object, just use the named exports

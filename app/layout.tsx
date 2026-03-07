@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import TopHeader from "@/components/TopHeader";
+import SWRegistration from "@/components/SWRegistration";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${outfit.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
+        <SWRegistration />
         <div className="flex h-screen overflow-hidden">
           <Sidebar />
           <div className="flex-1 flex flex-col ml-64 overflow-hidden relative">
