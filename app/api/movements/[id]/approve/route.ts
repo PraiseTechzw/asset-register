@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import db from "@/lib/db";
 import { getUserFromRequest, ROLES } from "@/lib/auth";
 import { logActivity } from "@/lib/logger";
 
@@ -15,10 +15,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Invalid status" }, { status: 400 });
         }
 
-        const movement = await prisma.assetMovement.findUnique({
-            where: { id },
-            include: { asset: true }
-        });
+        const movement = db.prepare("SELECT * FROM AssetMovement WHERE id = ?").get(id) as any;
 
         if (!movement) return NextResponse.json({ error: "Movement request not found" }, { status: 404 });
         if (movement.status !== "PENDING") {
@@ -35,27 +32,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Forbidden: You cannot approve this movement" }, { status: 403 });
         }
 
-        // Update Movement
-        const updatedMovement = await prisma.assetMovement.update({
-            where: { id },
-            data: {
-                status,
-                approvedById: user.userId,
-            }
-        });
+        const updatedMovement = db.transaction(() => {
+            db.prepare("UPDATE AssetMovement SET status = ?, approvedById = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?")
+                .run(status, user.userId, id);
 
-        // If APPROVED, update the Asset's currentDepartmentId
-        if (status === "APPROVED") {
-            await prisma.asset.update({
-                where: { id: movement.assetId },
-                data: { currentDepartmentId: movement.toDepartmentId }
-            });
-        }
+            if (status === "APPROVED") {
+                db.prepare("UPDATE Asset SET currentDepartmentId = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?")
+                    .run(movement.toDepartmentId, movement.assetId);
+            }
+
+            return db.prepare("SELECT * FROM AssetMovement WHERE id = ?").get(id);
+        })();
 
         await logActivity({
             action: status === "APPROVED" ? "MOVEMENT_APPROVED" : "MOVEMENT_REJECTED",
             entityType: "ASSET_MOVEMENT",
-            entityId: movement.id,
+            entityId: id,
             userId: user.userId,
             details: { assetId: movement.assetId, newStatus: status },
             req,
