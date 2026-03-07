@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getUserFromRequest, requireRole, ROLES } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
     try {
+        const user = await getUserFromRequest(req);
+        const roleError = requireRole(user, [ROLES.SUPER_ADMIN, ROLES.AUDITOR, ROLES.DEPT_OFFICER]);
+        if (roleError) return roleError;
+
         const assets = db.prepare(`
             SELECT a.id, a.name, a.category, d.name as department, a.status, a.condition, a.purchasePrice, a.purchaseDate
             FROM Asset a

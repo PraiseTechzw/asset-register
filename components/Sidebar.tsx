@@ -1,41 +1,44 @@
 import Link from 'next/link';
-import { Home, Package, BarChart2, ScanLine, Settings, Truck, ClipboardCheck } from 'lucide-react';
+import { Home, Package, BarChart2, ScanLine, Settings, Truck, ClipboardCheck, History } from 'lucide-react';
 
 const Sidebar = () => {
     return (
-        <aside className="w-64 h-screen border-r border-[var(--border)] bg-[var(--background)] flex flex-col fixed left-0 top-0 z-40">
-            <div className="h-16 flex items-center px-6 border-b border-[var(--border)]">
-                <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)]">Asset<span className="text-blue-500">Register</span></h1>
+        <aside className="w-64 h-screen border-r border-white/5 bg-[#050505] flex flex-col fixed left-0 top-0 z-40">
+            <div className="h-20 flex items-center px-6 border-b border-white/5">
+                <h1 className="text-2xl font-black italic tracking-tighter text-white">Asset<span className="text-blue-500">Node</span></h1>
             </div>
-            <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-                <Link href="/" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors">
-                    <Home className="w-5 h-5 text-gray-400" />
+            <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+                <Link href="/" className="flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl hover:bg-white/[0.03] text-white/40 hover:text-white transition-all group">
+                    <Home className="w-4 h-4 text-white/20 group-hover:text-blue-500 transition-colors" />
                     Dashboard
                 </Link>
-                <Link href="/assets" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors">
-                    <Package className="w-5 h-5 text-gray-400" />
-                    Asset Inventory
+                <Link href="/assets" className="flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl hover:bg-white/[0.03] text-white/40 hover:text-white transition-all group">
+                    <Package className="w-4 h-4 text-white/20 group-hover:text-blue-500 transition-colors" />
+                    Inventory
                 </Link>
-                <Link href="/transfers" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors">
-                    <Truck className="w-5 h-5 text-gray-400" />
+                <Link href="/transfers" className="flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl hover:bg-white/[0.03] text-white/40 hover:text-white transition-all group">
+                    <Truck className="w-4 h-4 text-white/20 group-hover:text-blue-500 transition-colors" />
                     Transfers
                 </Link>
-                <Link href="/audits" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors">
-                    <ClipboardCheck className="w-5 h-5 text-gray-400" />
-                    Audits
+                <Link href="/audits" className="flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl hover:bg-white/[0.03] text-white/40 hover:text-white transition-all group">
+                    <ClipboardCheck className="w-4 h-4 text-white/20 group-hover:text-blue-500 transition-colors" />
+                    Compliance
                 </Link>
-                <Link href="/analytics" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors">
-                    <BarChart2 className="w-5 h-5 text-gray-400" />
-                    Financial Insight
+                <Link href="/logs" className="flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl hover:bg-white/[0.03] text-white/40 hover:text-white transition-all group">
+                    <History className="w-4 h-4 text-white/20 group-hover:text-blue-500 transition-colors" />
+                    Activity Logs
                 </Link>
-                <Link href="/scanner" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-[var(--accent)] text-white bg-blue-600/10 border border-blue-500/20 transition-colors mt-4">
-                    <ScanLine className="w-5 h-5 text-blue-500" />
+
+                <div className="pt-8 pb-4 px-4 text-[10px] font-black text-white/10 tracking-[0.3em] uppercase">Operations</div>
+
+                <Link href="/scanner" className="flex items-center gap-3 px-5 py-4 text-xs font-black tracking-widest uppercase rounded-2xl bg-blue-600 text-white shadow-[0_10px_20px_-5px_rgba(37,99,235,0.3)] hover:bg-blue-700 transition-all">
+                    <ScanLine className="w-4 h-4" />
                     QR Scanner
                 </Link>
             </nav>
-            <div className="p-4 border-t border-[var(--border)]">
-                <Link href="/settings" className="flex items-center gap-3 px-3 py-2 w-full text-left text-sm font-medium rounded-lg hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors">
-                    <Settings className="w-5 h-5 text-gray-400" />
+            <div className="p-4 border-t border-white/5">
+                <Link href="/settings" className="flex items-center gap-3 px-4 py-3 text-xs font-black tracking-widest uppercase rounded-2xl hover:bg-white/[0.03] text-white/40 hover:text-white transition-all group">
+                    <Settings className="w-4 h-4 text-white/20 group-hover:text-blue-500 transition-colors" />
                     Settings
                 </Link>
             </div>
@@ -44,3 +47,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+

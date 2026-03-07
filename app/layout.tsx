@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import TopHeader from "@/components/TopHeader";
 import SWRegistration from "@/components/SWRegistration";
 
 const outfit = Outfit({
@@ -27,15 +25,7 @@ export default function RootLayout({
       <body className={`${outfit.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
         <ToastProvider>
           <SWRegistration />
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <div className="flex-1 flex flex-col ml-64 overflow-hidden relative">
-              <TopHeader />
-              <main className="flex-1 overflow-y-auto p-6 bg-[url('/grid-bg.svg')] bg-fixed">
-                {children}
-              </main>
-            </div>
-          </div>
+          {children}
         </ToastProvider>
       </body>
     </html>
