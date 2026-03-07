@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "QR Code-Based Digital Data Collection System",
 };
 
+import { ToastProvider } from "@/components/ToastProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,16 +25,18 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${outfit.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
-        <SWRegistration />
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <div className="flex-1 flex flex-col ml-64 overflow-hidden relative">
-            <TopHeader />
-            <main className="flex-1 overflow-y-auto p-6 bg-[url('/grid-bg.svg')] bg-fixed">
-              {children}
-            </main>
+        <ToastProvider>
+          <SWRegistration />
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <div className="flex-1 flex flex-col ml-64 overflow-hidden relative">
+              <TopHeader />
+              <main className="flex-1 overflow-y-auto p-6 bg-[url('/grid-bg.svg')] bg-fixed">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
+        </ToastProvider>
       </body>
     </html>
   );
