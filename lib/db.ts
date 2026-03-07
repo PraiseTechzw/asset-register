@@ -33,6 +33,7 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS Asset (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      serialNumber TEXT UNIQUE,
       description TEXT,
       category TEXT NOT NULL,
       status TEXT DEFAULT 'ACTIVE',
@@ -43,6 +44,7 @@ export function initDb() {
       purchasePrice REAL NOT NULL,
       currentDepartmentId TEXT,
       assignedUserId TEXT,
+      assignedTo TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (currentDepartmentId) REFERENCES Department(id),
@@ -102,6 +104,16 @@ export function initDb() {
       FOREIGN KEY (userId) REFERENCES User(id)
     );
   `);
+
+    // Migration: Add serialNumber if it doesn't exist
+    try {
+        db.exec("ALTER TABLE Asset ADD COLUMN serialNumber TEXT");
+        db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_serial ON Asset(serialNumber)");
+    } catch (e) { }
+
+    try {
+        db.exec("ALTER TABLE Asset ADD COLUMN assignedTo TEXT");
+    } catch (e) { }
 }
 
 // Initial Call

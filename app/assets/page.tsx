@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import db from '@/lib/db';
-import { Package, Search, Plus, Filter, ArrowUpDown } from 'lucide-react';
+import { Package, Search, Plus, Filter, ArrowUpDown, User } from 'lucide-react';
 
 import AssetFilterBar from '@/components/AssetFilterBar';
 
@@ -13,7 +13,7 @@ export default async function AssetsPage({
     const { q, category, status } = params;
 
     let query = `
-        SELECT a.*, d.name as departmentName 
+        SELECT a.*, d.name as departmentName
         FROM Asset a
         LEFT JOIN Department d ON a.currentDepartmentId = d.id
         WHERE 1=1
@@ -21,8 +21,8 @@ export default async function AssetsPage({
     const sqlParams: any[] = [];
 
     if (q) {
-        query += " AND (a.name LIKE ? OR a.id LIKE ?)";
-        sqlParams.push(`%${q}%`, `%${q}%`);
+        query += " AND (a.name LIKE ? OR a.id LIKE ? OR a.serialNumber LIKE ? OR d.name LIKE ? OR a.assignedTo LIKE ?)";
+        sqlParams.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
     }
     if (category) {
         query += " AND a.category = ?";
@@ -60,15 +60,15 @@ export default async function AssetsPage({
                         <thead>
                             <tr className="border-b border-[var(--border)] bg-[var(--background)]">
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-400">
-                                    <div className="flex items-center gap-2">Asset <ArrowUpDown className="w-3 h-3" /></div>
+                                    <div className="flex items-center gap-2">Asset & Serial <ArrowUpDown className="w-3 h-3" /></div>
                                 </th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-400">Category</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-400">Department</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-400">Location & Custody</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-400">Status</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-400 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[var(--border)]">
+                        <tbody className="divide-y divide-[var(--border)] font-[var(--font-outfit)]">
                             {assets.length > 0 ? assets.map((asset) => (
                                 <tr key={asset.id} className="hover:bg-[var(--accent)]/50 transition-colors group">
                                     <td className="px-6 py-4">
@@ -78,7 +78,8 @@ export default async function AssetsPage({
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-[var(--foreground)] group-hover:text-blue-500 transition-colors">{asset.name}</p>
-                                                <p className="text-xs text-gray-500">{asset.id}</p>
+                                                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-tight">S/N: {asset.serialNumber || 'N/A'}</p>
+                                                <p className="text-[10px] text-gray-500">{asset.id}</p>
                                             </div>
                                         </Link>
                                     </td>
@@ -88,7 +89,11 @@ export default async function AssetsPage({
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <p className="text-sm text-gray-400 font-medium">{asset.departmentName || 'Not Assigned'}</p>
+                                        <p className="text-sm text-[var(--foreground)] font-medium leading-none">{asset.departmentName || 'Not Assigned'}</p>
+                                        <div className="flex items-center gap-1 mt-1 text-gray-500">
+                                            <User size={10} />
+                                            <span className="text-[10px] uppercase tracking-tighter">{asset.assignedTo || 'Unassigned'}</span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${asset.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500' :
@@ -103,8 +108,8 @@ export default async function AssetsPage({
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold text-blue-500 hover:text-blue-400">
-                                            View Details
+                                        <Link href={`/assets/${asset.id}`} className="text-xs font-bold text-blue-500 hover:text-blue-400 uppercase tracking-widest">
+                                            Manage
                                         </Link>
                                     </td>
                                 </tr>

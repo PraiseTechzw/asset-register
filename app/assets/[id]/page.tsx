@@ -15,10 +15,9 @@ export default async function AssetDetailPage({
     const { id } = await params;
 
     const asset = db.prepare(`
-        SELECT a.*, d.name as departmentName, u.name as assignedUserName, v.method, v.rate, v.currentBookValue, v.accumulatedDepreciation
+        SELECT a.*, d.name as departmentName, v.method, v.rate, v.currentBookValue, v.accumulatedDepreciation
         FROM Asset a
         LEFT JOIN Department d ON a.currentDepartmentId = d.id
-        LEFT JOIN User u ON a.assignedUserId = u.id
         LEFT JOIN Valuation v ON v.assetId = a.id
         WHERE a.id = ?
     `).get(id) as any;
@@ -69,7 +68,11 @@ export default async function AssetDetailPage({
                         <span className="text-gray-500 text-sm font-mono">{asset.id}</span>
                     </div>
                     <h2 className="text-4xl font-bold tracking-tight text-[var(--foreground)]">{asset.name}</h2>
-                    <p className="text-gray-500 mt-2 max-w-2xl">{asset.description || 'No description provided for this asset.'}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                        <p className="text-blue-500 font-bold text-sm uppercase tracking-widest border-r border-[var(--border)] pr-4">Serial: {asset.serialNumber || 'UNCODED'}</p>
+                        <p className="text-gray-500 text-sm">{asset.category}</p>
+                    </div>
+                    <p className="text-gray-500 mt-4 max-w-2xl">{asset.description || 'No description provided for this asset.'}</p>
                 </div>
                 <div className="flex gap-3 w-full lg:w-auto">
                     <button className="flex-1 lg:flex-none px-4 py-2 border border-[var(--border)] rounded-xl text-sm font-medium hover:bg-[var(--accent)] transition-colors flex items-center justify-center gap-2">
@@ -111,8 +114,8 @@ export default async function AssetDetailPage({
                                     <p className="text-[var(--foreground)] font-medium">{asset.departmentName}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Custodian / Assigned User</p>
-                                    <p className="text-[var(--foreground)] font-medium">{asset.assignedUserName || 'Unassigned'}</p>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Custodian / Assigned Person</p>
+                                    <p className="text-[var(--foreground)] font-medium">{asset.assignedTo || 'Unassigned'}</p>
                                 </div>
                             </div>
                         </div>
@@ -160,9 +163,9 @@ export default async function AssetDetailPage({
                         </div>
                         <div className="w-full bg-emerald-500/20 h-2 rounded-full mb-6 overflow-hidden">
                             <div className={`h-full bg-emerald-500 rounded-full ${asset.condition === 'EXCELLENT' ? 'w-full' :
-                                    asset.condition === 'GOOD' ? 'w-[80%]' :
-                                        asset.condition === 'FAIR' ? 'w-[50%]' :
-                                            asset.condition === 'POOR' ? 'w-[20%]' : 'w-[5%]'
+                                asset.condition === 'GOOD' ? 'w-[80%]' :
+                                    asset.condition === 'FAIR' ? 'w-[50%]' :
+                                        asset.condition === 'POOR' ? 'w-[20%]' : 'w-[5%]'
                                 }`} />
                         </div>
                         <button className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-colors">

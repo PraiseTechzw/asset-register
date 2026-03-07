@@ -7,11 +7,13 @@ import crypto from "crypto";
 
 const createAssetSchema = z.object({
     name: z.string().min(1, "Name is required"),
+    serialNumber: z.string().min(1, "Serial number is required"),
     description: z.string().optional(),
     category: z.string().min(1, "Category is required"),
-    purchaseDate: z.string().datetime(),
+    purchaseDate: z.string(),
     purchasePrice: z.number().min(0),
     currentDepartmentId: z.string().optional(),
+    assignedTo: z.string().optional(),
     condition: z.string().optional(),
     valuationMethod: z.string().optional(),
     valuationRate: z.number().optional()
@@ -31,14 +33,21 @@ export async function POST(req: NextRequest) {
         }
 
         const data = result.data;
+
+        // Check for duplicate serial number
+        const existing = db.prepare("SELECT id FROM Asset WHERE serialNumber = ?").get(data.serialNumber);
+        if (existing) {
+            return NextResponse.json({ error: "Serial number already registered" }, { status: 409 });
+        }
+
         const qrCodeHash = crypto.randomBytes(16).toString("hex");
         const assetId = crypto.randomUUID();
 
         const createAsset = db.transaction(() => {
             db.prepare(`
-                INSERT INTO Asset (id, name, description, category, purchaseDate, purchasePrice, currentDepartmentId, condition, qrCodeHash, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
-            `).run(assetId, data.name, data.description || null, data.category, data.purchaseDate, data.purchasePrice, data.currentDepartmentId || null, data.condition || "GOOD", qrCodeHash);
+                INSERT INTO Asset (id, name, serialNumber, description, category, purchaseDate, purchasePrice, currentDepartmentId, assignedTo, condition, qrCodeHash, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
+            `).run(assetId, data.name, data.serialNumber, data.description || null, data.category, data.purchaseDate, data.purchasePrice, data.currentDepartmentId || null, data.assignedTo || null, data.condition || "GOOD", qrCodeHash);
 
             db.prepare(`
                 INSERT INTO Valuation (id, assetId, method, rate, accumulatedDepreciation, currentBookValue)

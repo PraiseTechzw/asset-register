@@ -2,22 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Package, User, MapPin, DollarSign, Calendar, Save } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, DollarSign, Calendar, Save, Hash } from "lucide-react";
 import Link from "next/link";
 
 export default function NewAssetPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [departments, setDepartments] = useState<any[]>([]);
+    const [metadata, setMetadata] = useState<{ departments: any[] }>({ departments: [] });
 
     // Form state
     const [formData, setFormData] = useState({
         name: "",
+        serialNumber: "",
         description: "",
         category: "Laptop",
         purchaseDate: new Date().toISOString().split("T")[0],
         purchasePrice: "",
         currentDepartmentId: "",
+        assignedTo: "", // Now a text field
         condition: "GOOD",
         valuationMethod: "STRAIGHT_LINE",
         valuationRate: "5"
@@ -28,7 +30,9 @@ export default function NewAssetPage() {
         fetch("/api/assets/metadata")
             .then(res => res.json())
             .then(data => {
-                if (data.departments) setDepartments(data.departments);
+                setMetadata({
+                    departments: data.departments || []
+                });
             })
             .catch(err => console.error("Failed to load metadata", err));
     }, []);
@@ -54,7 +58,7 @@ export default function NewAssetPage() {
                 router.refresh();
             } else {
                 const err = await res.json();
-                alert(err.error || "Failed to create asset");
+                alert(err.error || "Failed to create asset. Check if serial number is unique.");
             }
         } catch (error) {
             alert("An error occurred");
@@ -95,6 +99,22 @@ export default function NewAssetPage() {
                             />
                         </div>
                         <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Unique Serial Number</label>
+                            <div className="relative">
+                                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    required
+                                    value={formData.serialNumber}
+                                    onChange={e => setFormData({ ...formData, serialNumber: e.target.value })}
+                                    type="text"
+                                    placeholder="S/N: ABC123XYZ"
+                                    className="w-full bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Category</label>
                             <select
                                 value={formData.category}
@@ -107,6 +127,19 @@ export default function NewAssetPage() {
                                 <option>Projectors</option>
                                 <option>Furniture</option>
                                 <option>Vehicles</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Condition</label>
+                            <select
+                                value={formData.condition}
+                                onChange={e => setFormData({ ...formData, condition: e.target.value })}
+                                className="w-full bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2.5 px-4 text-sm outline-none"
+                            >
+                                <option value="EXCELLENT">Excellent (Brand New)</option>
+                                <option value="GOOD">Good (Light Use)</option>
+                                <option value="FAIR">Fair (Functional)</option>
+                                <option value="POOR">Poor (Needs Repair)</option>
                             </select>
                         </div>
                     </div>
@@ -129,7 +162,7 @@ export default function NewAssetPage() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Department</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Responsible Department</label>
                             <select
                                 required
                                 value={formData.currentDepartmentId}
@@ -137,23 +170,23 @@ export default function NewAssetPage() {
                                 className="w-full bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2.5 px-4 text-sm outline-none"
                             >
                                 <option value="">Select Department</option>
-                                {departments.map(d => (
+                                {metadata.departments.map(d => (
                                     <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Condition</label>
-                            <select
-                                value={formData.condition}
-                                onChange={e => setFormData({ ...formData, condition: e.target.value })}
-                                className="w-full bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2.5 px-4 text-sm outline-none"
-                            >
-                                <option value="EXCELLENT">Excellent (Brand New)</option>
-                                <option value="GOOD">Good (Light Use)</option>
-                                <option value="FAIR">Fair (Functional)</option>
-                                <option value="POOR">Poor (Needs Repair)</option>
-                            </select>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Assigned Person (Type Full Name)</label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={formData.assignedTo}
+                                    onChange={e => setFormData({ ...formData, assignedTo: e.target.value })}
+                                    placeholder="e.g. Tendai Musarurwa"
+                                    className="w-full bg-[var(--accent)] border border-[var(--border)] rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -190,7 +223,7 @@ export default function NewAssetPage() {
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Depreciation Limit (Years)</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Depreciation Period (Years)</label>
                             <input
                                 required
                                 value={formData.valuationRate}
