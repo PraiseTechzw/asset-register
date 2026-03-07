@@ -21,8 +21,10 @@ export function signToken(payload: JwtPayload): string {
  */
 export function verifyToken(token: string): JwtPayload | null {
     try {
-        return jwt.verify(token, JWT_SECRET) as JwtPayload;
+        const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+        return decoded;
     } catch (error) {
+        console.error("JWT Verification Failed:", error);
         return null;
     }
 }
@@ -34,6 +36,7 @@ export function verifyToken(token: string): JwtPayload | null {
 export async function getUserFromRequest(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        console.warn("Missing or invalid Authorization header");
         return null;
     }
 
@@ -41,6 +44,7 @@ export async function getUserFromRequest(req: NextRequest) {
     const payload = verifyToken(token);
 
     if (!payload) {
+        console.error("No valid payload found for token");
         return null;
     }
 
