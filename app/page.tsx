@@ -1,10 +1,7 @@
-import StatCard from '@/components/StatCard';
-import CampusOverview from '@/components/CampusOverview';
-import MissingAssetsPanel from '@/components/MissingAssetsPanel';
-import { Package, Laptop, AlertTriangle, CheckCircle } from 'lucide-react';
-import db from '@/lib/db';
+import Link from 'next/link';
 
 export default async function Home() {
+  // ... (rest of the logic remains same)
   // 1. Fetch Key Metrics
   const valuations = db.prepare('SELECT currentBookValue FROM Valuation').all() as { currentBookValue: number }[];
   const totalValue = valuations.reduce((acc, v) => acc + v.currentBookValue, 0);
