@@ -67,19 +67,19 @@ export default async function Home() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end mb-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 animate-fade-in">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-[var(--foreground)]">Asset Intelligence</h2>
-          <p className="text-gray-500 mt-1">Real-time valuation and condition overview for Zimbabwe Open University.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">Asset Intelligence</h2>
+          <p className="text-gray-500 mt-1 text-sm">Real-time valuation and condition overview for Zimbabwe Open University.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full sm:w-auto">
           <a
             href="/api/reports/export"
-            className="px-4 py-2 bg-[var(--accent)] hover:bg-[#262626] border border-[var(--border)] rounded-lg text-sm font-medium transition-colors cursor-pointer text-[var(--foreground)] flex items-center justify-center"
+            className="flex-1 sm:flex-none px-4 py-2 bg-[var(--accent)] hover:bg-[#262626] border border-[var(--border)] rounded-lg text-sm font-medium transition-colors cursor-pointer text-[var(--foreground)] flex items-center justify-center"
           >
             Export Report
           </a>
-          <Link href="/scanner" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-colors cursor-pointer flex items-center justify-center">
+          <Link href="/scanner" className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-colors cursor-pointer flex items-center justify-center">
             + Quick Audit
           </Link>
         </div>
@@ -116,11 +116,11 @@ export default async function Home() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in stagger-3 h-[450px]">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in stagger-3">
+        <div className="lg:col-span-2 min-h-[300px] lg:h-[450px]">
           <CampusOverview stats={deptStats} />
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 min-h-[250px] lg:h-[450px]">
           <MissingAssetsPanel assets={missingAssets} />
         </div>
       </div>

@@ -83,22 +83,22 @@ export default async function AssetDetailPage({
                 <ArrowLeft className="w-4 h-4" /> Back to Assets
             </Link>
 
-            <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+            <div className="flex flex-col gap-6">
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase ${asset.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-500' :
                             asset.status === 'MISSING' ? 'bg-amber-500/20 text-amber-500' : 'bg-rose-500/20 text-rose-500'
                             }`}>
                             {asset.status}
                         </span>
-                        <span className="text-gray-500 text-sm font-mono">{asset.id}</span>
+                        <span className="text-gray-500 text-xs font-mono break-all">{asset.id}</span>
                     </div>
-                    <h2 className="text-4xl font-bold tracking-tight text-[var(--foreground)]">{asset.name}</h2>
-                    <div className="flex items-center gap-4 mt-2">
-                        <p className="text-blue-500 font-bold text-sm uppercase tracking-widest border-r border-[var(--border)] pr-4">Serial: {asset.serialNumber || 'UNCODED'}</p>
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[var(--foreground)]">{asset.name}</h2>
+                    <div className="flex flex-wrap items-center gap-3 mt-2">
+                        <p className="text-blue-500 font-bold text-sm uppercase tracking-widest border-r border-[var(--border)] pr-3">Serial: {asset.serialNumber || 'UNCODED'}</p>
                         <p className="text-gray-500 text-sm">{asset.category}</p>
                     </div>
-                    <p className="text-gray-500 mt-4 max-w-2xl">{asset.description || 'No description provided for this asset.'}</p>
+                    <p className="text-gray-500 mt-4 text-sm leading-relaxed">{asset.description || 'No description provided for this asset.'}</p>
                 </div>
 
                 <AssetTopActions asset={asset} />
