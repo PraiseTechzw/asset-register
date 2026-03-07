@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Package, User, MapPin, DollarSign, Calendar, Save, Hash } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/components/ToastProvider";
 
 export default function NewAssetPage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [metadata, setMetadata] = useState<{ departments: any[] }>({ departments: [] });
 
@@ -54,14 +56,15 @@ export default function NewAssetPage() {
             });
 
             if (res.ok) {
+                showToast("Asset registered successfully!", "success");
                 router.push("/assets");
                 router.refresh();
             } else {
                 const err = await res.json();
-                alert(err.error || "Failed to create asset. Check if serial number is unique.");
+                showToast(err.error || "Failed to create asset. Check if serial number is unique.", "error");
             }
         } catch (error) {
-            alert("An error occurred");
+            showToast("An error occurred during registration", "error");
         } finally {
             setLoading(false);
         }
