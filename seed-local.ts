@@ -1,9 +1,9 @@
 import db from './lib/db';
+import bcrypt from 'bcryptjs';
 
 async function seed() {
-    console.log('Seeding database...');
+    console.log('🚀 Seeding professional database...');
 
-    // Simple script to seed the better-sqlite3 database
     const run = (sql: string, params: any[] = []) => db.prepare(sql).run(...params);
 
     // Clear tables
@@ -16,33 +16,47 @@ async function seed() {
     run('DELETE FROM Department');
 
     // Insert Departments
-    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-1', 'Computer Science', 'CS Dept']);
-    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-2', 'Engineering', 'Engineering Dept']);
-    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-3', 'Administration', 'Admin Dept']);
+    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-1', 'Computer Science', 'Main Campus - Faculty of IT']);
+    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-2', 'Engineering', 'West Wing - Engineering Block']);
+    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-3', 'Administration', 'Central Admin Office']);
 
-    // Insert Users
+    // Insert Users with Real Hashes
+    const passwordHash = await bcrypt.hash('password123', 10);
+
     run('INSERT INTO User (id, email, passwordHash, name, role, departmentId) VALUES (?, ?, ?, ?, ?, ?)', [
-        'user-1', 'johndoe@example.com', 'hashed_pass', 'John Doe', 'SUPER_ADMIN', 'dept-3'
+        'user-admin', 'admin@zou.ac.zw', passwordHash, 'System Admin', 'SUPER_ADMIN', 'dept-3'
+    ]);
+
+    run('INSERT INTO User (id, email, passwordHash, name, role, departmentId) VALUES (?, ?, ?, ?, ?, ?)', [
+        'user-officer', 'officer@zou.ac.zw', passwordHash, 'John Doe', 'DEPT_OFFICER', 'dept-1'
     ]);
 
     // Insert Assets
     const assets = [
-        { id: 'AST-001', name: 'Dell XPS 15', category: 'Laptop', status: 'ACTIVE', condition: 'GOOD', qr: 'dev-qr-1', price: 2000, dept: 'dept-1' },
-        { id: 'AST-002', name: 'MacBook Pro', category: 'Laptop', status: 'MISSING', condition: 'FAIR', qr: 'dev-qr-2', price: 2500, dept: 'dept-1' },
-        { id: 'AST-003', name: 'Cisco Router', category: 'Network', status: 'ACTIVE', condition: 'EXCELLENT', qr: 'dev-qr-3', price: 500, dept: 'dept-2' },
+        { id: 'ZOU-LAP-001', name: 'Dell Latitude 5420', category: 'Laptop', status: 'ACTIVE', condition: 'EXCELLENT', qr: 'QR-LAP-001', price: 1200, dept: 'dept-1' },
+        { id: 'ZOU-LAP-002', name: 'MacBook Air M2', category: 'Laptop', status: 'MISSING', condition: 'GOOD', qr: 'QR-LAP-002', price: 1400, dept: 'dept-1' },
+        { id: 'ZOU-SRV-001', name: 'HP ProLiant DL380', category: 'Server', status: 'ACTIVE', condition: 'GOOD', qr: 'QR-SRV-01', price: 4500, dept: 'dept-3' },
+        { id: 'ZOU-PRN-001', name: 'Kyocera TaskAlpha', category: 'Printer', status: 'SCRAP', condition: 'SCRAP', qr: 'QR-PRN-01', price: 800, dept: 'dept-2' },
     ];
 
     for (const a of assets) {
         run('INSERT INTO Asset (id, name, category, status, condition, qrCodeHash, purchasePrice, purchaseDate, currentDepartmentId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            a.id, a.name, a.category, a.status, a.condition, a.qr, a.price, new Date().toISOString(), a.dept
+            a.id, a.name, a.category, a.status, a.condition, a.qr, a.price, new Date('2024-01-15').toISOString(), a.dept
         ]);
 
-        run('INSERT INTO Valuation (id, assetId, method, rate, currentBookValue) VALUES (?, ?, ?, ?, ?)', [
-            `val-${a.id}`, a.id, 'STRAIGHT_LINE', 5, a.price - 100
+        run('INSERT INTO Valuation (id, assetId, method, rate, currentBookValue, accumulatedDepreciation) VALUES (?, ?, ?, ?, ?, ?)', [
+            `val-${a.id}`, a.id, 'STRAIGHT_LINE', 10, a.price * 0.9, a.price * 0.1
         ]);
     }
 
-    console.log('Database seeded successfully!');
+    // Insert a pending movement for demonstration
+    run('INSERT INTO AssetMovement (id, assetId, fromDepartmentId, toDepartmentId, requestedById, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        'mov-1', 'ZOU-LAP-001', 'dept-1', 'dept-2', 'user-officer', 'PENDING', 'Temporary transfer for workshop'
+    ]);
+
+    console.log('✅ Database seeded successfully with real users!');
+    console.log('Admin Email: admin@zou.ac.zw');
+    console.log('Password: password123');
 }
 
-seed();
+seed().catch(err => console.error('Seed crash:', err));
