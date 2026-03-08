@@ -91,7 +91,12 @@ cp .env.example .env
 npm run seed
 ```
 
-### 4. Launch Development
+### 4. Default Credentials (Development)
+After seeding, you can log in with:
+- **Email**: `admin@zou.ac.zw`
+- **Password**: `password123`
+
+### 5. Launch Development
 ```bash
 # Start the development server
 npm run dev
