@@ -3,12 +3,12 @@
 # 🏛️ Zim Open University Asset Register
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)](https://sqlite.org/)
 
-**A premium, high-performance asset management solution tailored for Zim Open University.**
+**A premium, high-performance asset management solution tailored for Zimbabwe Open University.**
 
 [Explore Docs]() · [Report Bug](https://github.com/PraiseTechzw/asset-register/issues) · [Request Feature](https://github.com/PraiseTechzw/asset-register/issues)
 
@@ -20,15 +20,16 @@
 
 ## 🚀 Overview
 
-The **Asset Register** is a state-of-the-art asset tracking system designed to streamline the management of institutional resources. From real-time QR scanning to deep-dive analytics, it provides a comprehensive 360-degree view of all physical assets.
+The **Asset Register** is a state-of-the-art asset tracking system designed to streamline the management of institutional resources. From real-time QR scanning to deep-dive analytics, it provides a comprehensive 360-degree view of all physical assets across all campuses.
 
 ### ✨ Key Features
 
--   **🔍 Smart Search & Filter**: Find any asset in milliseconds with advanced metadata filtering.
--   **📷 QR Integration**: Seamlessly bridge physical and digital worlds with zero-lag QR scanning.
--   **📊 Dynamic Analytics**: Interactive dashboards providing insights into asset distribution and status.
--   **🛡️ Enterprise Security**: Multi-layered authentication and role-based access control.
--   **📱 Mobile-First Design**: Fully responsive UI that feels like a native app on any device.
+-   **🔍 Smart Search & Filter**: Find any asset in milliseconds with advanced metadata filtering and category sorting.
+-   **📷 QR Integration**: Seamlessly bridge physical and digital worlds with zero-lag QR scanning for asset identification.
+-   **📊 Dynamic Analytics**: Interactive dashboards powered by **Recharts**, providing visual insights into asset distribution, value, and status.
+-   **🔄 Asset Movements**: Track transfers between departments with a full audit trail and approval workflow.
+-   **🛡️ Enterprise Security**: Role-Based Access Control (RBAC) with secure JWT authentication and cookie-based session management.
+-   **📱 Mobile-First Design**: Fully responsive UI built with Tailwind CSS 4 and Framer Motion for a premium, native-app feel.
 
 ---
 
@@ -38,14 +39,27 @@ The **Asset Register** is a state-of-the-art asset tracking system designed to s
 
 | Component | Technology |
 | :--- | :--- |
-| **Framework** | Next.js 15 (App Router) |
+| **Framework** | Next.js 16 (App Router) |
 | **Language** | TypeScript |
 | **Database** | SQLite + better-sqlite3 |
 | **Styling** | Tailwind CSS 4 |
 | **Animations** | Framer Motion |
+| **Charts** | Recharts |
 | **Icons** | Lucide React |
+| **Validation** | Zod |
 
 </div>
+
+---
+
+## 🔐 Roles & Permissions
+
+The system implements strict **Role-Based Access Control (RBAC)**:
+
+-   **SUPER_ADMIN**: Full system access, user management, and global audit logs.
+-   **ASSET_CONTROLLER**: Manage asset records, categories, and university-wide inventories.
+-   **DEPT_OFFICER**: Manage assets within their specific department and initiate transfers.
+-   **AUDITOR**: View-only access to reports and movement history for compliance verification.
 
 ---
 
@@ -68,8 +82,18 @@ npm install
 
 # Configure environment
 cp .env.example .env
+# Important: Update JWT_SECRET in .env for production
+```
 
-# Launch development
+### 3. Database Initialization
+```bash
+# Seed the database with default departments, users, and assets
+npm run seed
+```
+
+### 4. Launch Development
+```bash
+# Start the development server
 npm run dev
 ```
 
@@ -104,6 +128,8 @@ Want to contribute? Check out our [Contributing Guide](CONTRIBUTING.md).
 
 ## 🗺️ Roadmap
 
+- [x] Responsive Dashboard UI
+- [x] Secure Authentication Flow
 - [ ] PDF Export for Asset Reports
 - [ ] Multi-campus Location Mapping
 - [ ] Maintenance Scheduling & Alerts
@@ -121,6 +147,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 Built with ❤️ by **PraiseTechzw & TafadzwaMac**
 
-[Support](mailto:[EMAIL_ADDRESS]) · [Contact](https://github.com/PraiseTechzw)
+[Support](mailto:praisetech@example.com) · [Contact](https://github.com/PraiseTechzw)
 
 </div>
+
