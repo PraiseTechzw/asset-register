@@ -59,7 +59,34 @@ async function seed() {
         'mov-1', 'ZOU-LAP-001', 'dept-1', 'dept-2', 'user-officer', 'PENDING', 'Temporary transfer for workshop'
     ]);
 
-    console.log('✅ Database seeded successfully with real users!');
+    // Insert Maintenance Jobs
+    run('INSERT INTO MaintenanceJob (id, assetId, type, status, scheduledDate, notes, createdById) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        'maint-1', 'ZOU-LAP-001', 'ROUTINE', 'SCHEDULED', new Date('2024-03-20').toISOString(), 'Annual hardware checkup', 'user-admin'
+    ]);
+    run('INSERT INTO MaintenanceJob (id, assetId, type, status, scheduledDate, notes, createdById) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        'maint-2', 'ZOU-SRV-001', 'CRITICAL', 'SCHEDULED', new Date('2024-03-05').toISOString(), 'Server uptime optimization', 'user-admin'
+    ]);
+    run('INSERT INTO MaintenanceJob (id, assetId, type, status, scheduledDate, notes, createdById) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        'maint-3', 'ZOU-PRN-001', 'REPAIR', 'COMPLETED', new Date('2024-02-15').toISOString(), 'Replaced fuser unit', 'user-admin'
+    ]);
+
+    // Insert Audit Logs
+    run('INSERT INTO AuditLog (id, action, entityType, entityId, userId, details, ipAddress) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        'log-1', 'ASSET_CREATED', 'Asset', 'ZOU-LAP-001', 'user-admin', 'Initial asset enrollment into system', '192.168.1.10'
+    ]);
+    run('INSERT INTO AuditLog (id, action, entityType, entityId, userId, details, ipAddress) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        'log-2', 'QR_SCAN_SUCCESS', 'Asset', 'ZOU-LAP-001', 'user-officer', 'Manual audit performed via QR scan', '192.168.1.15'
+    ]);
+    run('INSERT INTO AuditLog (id, action, entityType, entityId, userId, details, ipAddress) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        'log-3', 'TRANSFER_REQUESTED', 'AssetMovement', 'mov-1', 'user-officer', 'Departmental transfer initiated', '192.168.1.15'
+    ]);
+
+    // Insert Alerts
+    run('INSERT INTO Alert (id, userId, title, message, type) VALUES (?, ?, ?, ?, ?)', [
+        'alert-1', 'user-admin', 'Pending Approval', 'A new asset movement request requires your attention.', 'INFO'
+    ]);
+
+    console.log('✅ Database seeded successfully with real users, logs, and maintenance tasks!');
     console.log('Admin Email: admin@zou.ac.zw');
     console.log('Password: password123');
 }
