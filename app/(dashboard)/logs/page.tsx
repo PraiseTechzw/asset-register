@@ -1,14 +1,29 @@
 import db from '@/lib/db';
 import { History, User, Activity, Search } from 'lucide-react';
 
-export default async function LogsPage() {
-    const logs = db.prepare(`
+export default async function LogsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ q?: string }>;
+}) {
+    const params = await searchParams;
+    const q = params.q;
+
+    let query = `
         SELECT l.*, u.name as userName 
         FROM AuditLog l
         LEFT JOIN User u ON l.userId = u.id
-        ORDER BY l.timestamp DESC
-        LIMIT 100
-    `).all() as any[];
+    `;
+    const sqlParams: any[] = [];
+
+    if (q) {
+        query += ` WHERE l.action LIKE ? OR l.entityType LIKE ? OR l.entityId LIKE ? OR u.name LIKE ? OR l.details LIKE ?`;
+        sqlParams.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+    }
+
+    query += ` ORDER BY l.timestamp DESC LIMIT 100`;
+
+    const logs = db.prepare(query).all(...sqlParams) as any[];
 
     return (
         <div className="space-y-6">
@@ -17,14 +32,16 @@ export default async function LogsPage() {
                     <h2 className="text-2xl sm:text-3xl font-black italic tracking-tight text-white uppercase">System_Logs</h2>
                     <p className="text-white/30 text-xs font-mono tracking-widest mt-1">Live Activity Stream • Node-01</p>
                 </div>
-                <div className="relative group w-full sm:w-auto">
+                <form className="relative group w-full sm:w-auto">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-blue-500 transition-colors" />
                     <input
                         type="text"
-                        placeholder="Search hash..."
+                        name="q"
+                        defaultValue={q}
+                        placeholder="Search logs..."
                         className="w-full sm:w-64 bg-white/[0.03] border border-white/10 rounded-xl py-2 px-10 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                     />
-                </div>
+                </form>
             </div>
 
             {/* Mobile card layout */}
@@ -44,10 +61,10 @@ export default async function LogsPage() {
                                 <span className="text-white text-xs font-bold">{log.userName || 'SYSTEM'}</span>
                             </div>
                             <span className={`px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase border ${log.action.includes('FAILED') || log.action.includes('DENIED')
-                                    ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
-                                    : log.action.includes('QR')
-                                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-500'
-                                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                                ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                                : log.action.includes('QR')
+                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
                                 }`}>
                                 {log.action}
                             </span>
@@ -95,10 +112,10 @@ export default async function LogsPage() {
                                     </td>
                                     <td className="px-6 py-5">
                                         <span className={`px-2 py-1 rounded-md text-[9px] font-black tracking-widest uppercase border ${log.action.includes('FAILED') || log.action.includes('DENIED')
-                                                ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
-                                                : log.action.includes('QR')
-                                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-500'
-                                                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                                            ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                                            : log.action.includes('QR')
+                                                ? 'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
                                             }`}>
                                             {log.action}
                                         </span>

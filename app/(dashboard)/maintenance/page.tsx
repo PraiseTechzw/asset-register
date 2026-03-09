@@ -23,9 +23,9 @@ export default async function MaintenancePage() {
                     <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">Maintenance <span className="text-blue-500">Center</span></h1>
                     <p className="text-white/40 text-xs font-bold tracking-[0.2em] uppercase mt-1">Institutional Asset Lifecycle Management</p>
                 </div>
-                <button className="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[10px] font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+                <Link href="/maintenance/new" className="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[10px] font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]">
                     Schedule Service
-                </button>
+                </Link>
             </div>
 
             {/* Stats Cluster */}
@@ -90,8 +90,8 @@ export default async function MaintenancePage() {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <div className={`w-1.5 h-1.5 rounded-full ${job.status === 'COMPLETED' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                                                    new Date(job.scheduledDate) <= new Date() ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' :
-                                                        'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+                                                new Date(job.scheduledDate) <= new Date() ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' :
+                                                    'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
                                                 }`} />
                                             <span className="text-[10px] font-black text-white/60 uppercase">{job.status}</span>
                                         </div>
