@@ -18,13 +18,15 @@ export async function GET(req: NextRequest) {
         // Aggregate some essential notification counts
         const pendingMovements = (db.prepare("SELECT COUNT(*) as count FROM AssetMovement WHERE status = 'PENDING'").get() as any).count;
         const criticalAssets = (db.prepare("SELECT COUNT(*) as count FROM Asset WHERE status = 'MISSING' OR condition = 'SCRAP'").get() as any).count;
+        const overdueMaintenance = (db.prepare("SELECT COUNT(*) as count FROM MaintenanceJob WHERE status = 'SCHEDULED' AND scheduledDate <= date('now')").get() as any).count;
 
         return NextResponse.json({
             user,
             notifications: {
-                total: pendingMovements + criticalAssets,
+                total: pendingMovements + criticalAssets + overdueMaintenance,
                 pendingMovements,
-                criticalAssets
+                criticalAssets,
+                overdueMaintenance
             }
         });
     } catch (error) {

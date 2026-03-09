@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Package, ScanLine, Settings, Truck, ClipboardCheck, History, BarChart2, X } from 'lucide-react';
+import {
+    Home, Package, ScanLine, Settings, Truck, ClipboardCheck,
+    History, BarChart2, X, Map, Wrench, Bell
+} from 'lucide-react';
 
 interface SidebarProps {
     onClose?: () => void;
@@ -80,6 +83,16 @@ const Sidebar = ({ onClose }: SidebarProps) => {
                     {isActive('/logs') && <ActivePip />}
                     <History className={iconClass('/logs')} />
                     <span className="z-10">Activity Logs</span>
+                </Link>
+                <Link href="/maintenance" className={linkClass('/maintenance')}>
+                    {isActive('/maintenance') && <ActivePip />}
+                    <Wrench className={iconClass('/maintenance')} />
+                    <span className="z-10">Maintenance</span>
+                </Link>
+                <Link href="/mapping" className={linkClass('/mapping')}>
+                    {isActive('/mapping') && <ActivePip />}
+                    <Map className={iconClass('/mapping')} />
+                    <span className="z-10">Campus Map</span>
                 </Link>
 
                 <div className="pt-6 pb-3 px-4 flex items-center gap-2">

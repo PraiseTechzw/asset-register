@@ -113,6 +113,31 @@ export function initDb() {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES User(id)
     );
+
+    CREATE TABLE IF NOT EXISTS MaintenanceJob (
+      id TEXT PRIMARY KEY,
+      assetId TEXT NOT NULL,
+      type TEXT DEFAULT 'ROUTINE',
+      status TEXT DEFAULT 'SCHEDULED',
+      scheduledDate DATETIME NOT NULL,
+      completedDate DATETIME,
+      notes TEXT,
+      createdById TEXT NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (assetId) REFERENCES Asset(id),
+      FOREIGN KEY (createdById) REFERENCES User(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS Alert (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT,
+      type TEXT DEFAULT 'INFO',
+      isRead INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES User(id)
+    );
   `);
 
   // Migration: Add serialNumber if it doesn't exist

@@ -14,11 +14,16 @@ async function seed() {
     run('DELETE FROM Asset');
     run('DELETE FROM User');
     run('DELETE FROM Department');
+    run('DELETE FROM Campus');
+
+    // Insert Campuses
+    run('INSERT INTO Campus (id, name, location, coordinates) VALUES (?, ?, ?, ?)', ['campus-1', 'Harare Main Campus', 'Mount Pleasant, Harare', '-17.783,31.050']);
+    run('INSERT INTO Campus (id, name, location, coordinates) VALUES (?, ?, ?, ?)', ['campus-2', 'Bulawayo Regional Centre', 'Ascot, Bulawayo', '-20.150,28.583']);
 
     // Insert Departments
-    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-1', 'Computer Science', 'Main Campus - Faculty of IT']);
-    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-2', 'Engineering', 'West Wing - Engineering Block']);
-    run('INSERT INTO Department (id, name, description) VALUES (?, ?, ?)', ['dept-3', 'Administration', 'Central Admin Office']);
+    run('INSERT INTO Department (id, name, description, campusId) VALUES (?, ?, ?, ?)', ['dept-1', 'Computer Science', 'Main Campus - Faculty of IT', 'campus-1']);
+    run('INSERT INTO Department (id, name, description, campusId) VALUES (?, ?, ?, ?)', ['dept-2', 'Engineering', 'West Wing - Engineering Block', 'campus-1']);
+    run('INSERT INTO Department (id, name, description, campusId) VALUES (?, ?, ?, ?)', ['dept-3', 'Administration', 'Central Admin Office', 'campus-1']);
 
     // Insert Users with Real Hashes
     const passwordHash = await bcrypt.hash('password123', 10);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, UserCircle, LogOut, Package, Truck, AlertTriangle, Menu } from 'lucide-react';
+import { Bell, Search, UserCircle, LogOut, Package, Truck, AlertTriangle, Menu, Wrench } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -126,6 +126,15 @@ const TopHeader = ({ onMenuToggle }: TopHeaderProps) => {
                                         <div>
                                             <p className="text-xs font-bold text-[var(--foreground)]">{notifs.criticalAssets} Critical Issues</p>
                                             <p className="text-[10px] text-gray-500">Missing or scrapped assets logged</p>
+                                        </div>
+                                    </Link>
+                                )}
+                                {notifs?.overdueMaintenance > 0 && (
+                                    <Link href="/maintenance" className="flex items-start gap-3 p-2 hover:bg-[var(--accent)] rounded-xl transition-colors">
+                                        <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500"><Wrench className="w-4 h-4" /></div>
+                                        <div>
+                                            <p className="text-xs font-bold text-[var(--foreground)]">{notifs.overdueMaintenance} Overdue Services</p>
+                                            <p className="text-[10px] text-gray-500">Asset maintenance required</p>
                                         </div>
                                     </Link>
                                 )}

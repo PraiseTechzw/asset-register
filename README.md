@@ -135,9 +135,9 @@ Want to contribute? Check out our [Contributing Guide](CONTRIBUTING.md).
 
 - [x] Responsive Dashboard UI
 - [x] Secure Authentication Flow
-- [ ] PDF Export for Asset Reports
-- [ ] Multi-campus Location Mapping
-- [ ] Maintenance Scheduling & Alerts
+- [x] PDF Export for Asset Reports
+- [x] Multi-campus Location Mapping
+- [x] Maintenance Scheduling & Alerts
 - [ ] Integration with ZOU SAP Systems
 
 ---
