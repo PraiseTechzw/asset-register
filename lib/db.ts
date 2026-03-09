@@ -9,13 +9,23 @@ db.pragma('journal_mode = WAL');
 
 // Initialize Schema
 export function initDb() {
-    db.exec(`
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS Campus (
+      id TEXT PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      location TEXT,
+      coordinates TEXT, -- Format: "lat,lng"
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS Department (
       id TEXT PRIMARY KEY,
       name TEXT UNIQUE NOT NULL,
       description TEXT,
+      campusId TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (campusId) REFERENCES Campus(id)
     );
 
     CREATE TABLE IF NOT EXISTS User (
@@ -105,15 +115,19 @@ export function initDb() {
     );
   `);
 
-    // Migration: Add serialNumber if it doesn't exist
-    try {
-        db.exec("ALTER TABLE Asset ADD COLUMN serialNumber TEXT");
-        db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_serial ON Asset(serialNumber)");
-    } catch (e) { }
+  // Migration: Add serialNumber if it doesn't exist
+  try {
+    db.exec("ALTER TABLE Asset ADD COLUMN serialNumber TEXT");
+    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_serial ON Asset(serialNumber)");
+  } catch (e) { }
 
-    try {
-        db.exec("ALTER TABLE Asset ADD COLUMN assignedTo TEXT");
-    } catch (e) { }
+  try {
+    db.exec("ALTER TABLE Asset ADD COLUMN assignedTo TEXT");
+  } catch (e) { }
+
+  try {
+    db.exec("ALTER TABLE Department ADD COLUMN campusId TEXT");
+  } catch (e) { }
 }
 
 // Initial Call

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import AssetFilterBar from '@/components/AssetFilterBar';
+import ExportButton from '@/components/ExportButton';
 
 const getCategoryIcon = (category: string) => {
     switch (category?.toLowerCase()) {
@@ -61,9 +62,12 @@ export default async function AssetsPage({
                     <h2 className="text-3xl font-bold tracking-tight text-[var(--foreground)]">Asset Inventory</h2>
                     <p className="text-gray-500 mt-1">Manage and track all institutional assets across campuses.</p>
                 </div>
-                <Link href="/assets/new" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-lg hover:shadow-blue-500/20">
-                    <Plus className="w-4 h-4" /> Add New Asset
-                </Link>
+                <div className="flex items-center gap-3">
+                    <ExportButton assets={assets} />
+                    <Link href="/assets/new" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-lg hover:shadow-blue-500/20">
+                        <Plus className="w-4 h-4" /> Add New Asset
+                    </Link>
+                </div>
             </div>
 
             <AssetFilterBar categories={categories} />
