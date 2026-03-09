@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { MapPin, Building2, Package, Globe, Layers, Map as MapIcon, Share2, PlusCircle, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Building2, Package, Globe, Layers, Map as MapIcon, Share2, PlusCircle, Check, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 interface Campus {
@@ -16,19 +16,53 @@ interface Campus {
 export default function MappingClient({ campuses }: { campuses: Campus[] }) {
     const [viewMode, setViewMode] = useState<'satellite' | 'topology'>('topology');
     const [selectedCampus, setSelectedCampus] = useState<string | null>(null);
+    const [feedback, setFeedback] = useState<{ message: string; type: 'info' | 'success' } | null>(null);
+
+    // Auto-clear feedback after 3 seconds
+    useEffect(() => {
+        if (feedback) {
+            const timer = setTimeout(() => setFeedback(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [feedback]);
+
+    const showFeedback = (message: string, type: 'info' | 'success' = 'info') => {
+        setFeedback({ message, type });
+    };
 
     const handleShare = () => {
         navigator.clipboard.writeText(window.location.href);
-        alert("Geospatial node link copied to clipboard!");
+        showFeedback("Geospatial node link copied to clipboard", "success");
     };
 
     const handleMapToggle = () => {
-        alert(`Switching to ${viewMode === 'topology' ? 'topographic' : 'satellite'} overlay view...`);
-        setViewMode(viewMode === 'topology' ? 'satellite' : 'topology');
+        const nextMode = viewMode === 'topology' ? 'satellite' : 'topology';
+        setViewMode(nextMode);
+        showFeedback(`Switched to ${nextMode} overlay`, "info");
+    };
+
+    const handleReset = () => {
+        setSelectedCampus(null);
+        setViewMode('topology');
+        showFeedback("View reset to institutional topology", "info");
     };
 
     return (
-        <div className="h-full flex flex-col gap-6 animate-in slide-in-from-bottom-2 duration-700">
+        <div className="h-full flex flex-col gap-6 animate-in slide-in-from-bottom-2 duration-700 relative">
+
+            {/* IN-APP FEEDBACK NOTIFICATION */}
+            {feedback && (
+                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className={`px-6 py-3 rounded-2xl border backdrop-blur-2xl shadow-2xl flex items-center gap-3 ${feedback.type === 'success'
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                            : 'border-blue-500/30 bg-blue-500/10 text-blue-400'
+                        }`}>
+                        {feedback.type === 'success' ? <Check size={16} /> : <Loader2 size={16} className="animate-spin" />}
+                        <span className="text-[10px] font-black uppercase tracking-widest">{feedback.message}</span>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase flex items-center gap-3">
@@ -37,15 +71,21 @@ export default function MappingClient({ campuses }: { campuses: Campus[] }) {
                     </h1>
                     <p className="text-white/40 text-[10px] font-black tracking-[0.3em] uppercase mt-1">Institutional Asset Topology & Distribution</p>
                 </div>
-                <div className="flex items-center gap-2 p-1.5 bg-white/[0.03] border border-white/5 rounded-2xl z-20">
+                <div className="flex items-center gap-2 p-1.5 bg-white/[0.03] border border-white/5 rounded-2xl z-20 shadow-2xl">
                     <button
-                        onClick={() => setViewMode('satellite')}
+                        onClick={() => {
+                            setViewMode('satellite');
+                            showFeedback("Enabling high-altitude imaging", "info");
+                        }}
                         className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'satellite' ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'text-white/30 hover:text-white'}`}
                     >
                         Satellite
                     </button>
                     <button
-                        onClick={() => setViewMode('topology')}
+                        onClick={() => {
+                            setViewMode('topology');
+                            showFeedback("Enabling vector grid overlay", "info");
+                        }}
                         className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'topology' ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'text-white/30 hover:text-white'}`}
                     >
                         Topology
@@ -59,7 +99,10 @@ export default function MappingClient({ campuses }: { campuses: Campus[] }) {
                     {campuses.map((campus) => (
                         <div
                             key={campus.id}
-                            onClick={() => setSelectedCampus(campus.id)}
+                            onClick={() => {
+                                setSelectedCampus(campus.id);
+                                showFeedback(`Analyzing ${campus.name}`, "info");
+                            }}
                             className={`glass-panel p-5 rounded-2xl border transition-all group cursor-pointer relative overflow-hidden ${selectedCampus === campus.id ? 'border-blue-500 bg-blue-500/[0.05]' : 'border-white/5 hover:border-blue-500/30'}`}
                         >
                             <div className="flex justify-between items-start mb-4">
@@ -93,7 +136,10 @@ export default function MappingClient({ campuses }: { campuses: Campus[] }) {
 
                 {/* Main Map Viewport */}
                 <div
-                    onClick={() => setSelectedCampus(null)}
+                    onClick={() => {
+                        setSelectedCampus(null);
+                        showFeedback("Global view restored", "info");
+                    }}
                     className={`lg:col-span-3 glass-panel rounded-[2.5rem] border border-white/5 relative overflow-hidden transition-all duration-1000 flex flex-col items-center justify-center group ${viewMode === 'satellite' ? 'bg-[#000a1a]' : 'bg-[#050505] shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]'}`}
                 >
 
@@ -119,6 +165,7 @@ export default function MappingClient({ campuses }: { campuses: Campus[] }) {
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedCampus(campus.id);
+                                    showFeedback(`Analyzing ${campus.name}`, "info");
                                 }}
                                 className={`absolute transition-all duration-700 z-10 cursor-pointer ${isSelected ? 'scale-125' : 'hover:scale-110'}`}
                                 style={{
@@ -188,30 +235,27 @@ export default function MappingClient({ campuses }: { campuses: Campus[] }) {
                             </div>
                             <div className="flex items-center gap-3 px-4 py-2 bg-[#0a0a0a]/80 backdrop-blur-xl rounded-2xl border border-white/5 shadow-2xl">
                                 <Layers className="w-4 h-4 text-blue-500" />
-                                <span className="text-[10px] font-black text-white/60 tracking-widest uppercase">Network Node Connectivity: Stable</span>
+                                <span className="text-[10px] font-black text-white/60 tracking-widest uppercase">Network Connectivity: Stable</span>
                             </div>
                         </div>
 
                         <div className="flex gap-3">
                             <button
-                                onClick={() => {
-                                    setSelectedCampus(null);
-                                    setViewMode('topology');
-                                }}
+                                onClick={handleReset}
                                 className="px-6 py-3 bg-[#0a0a0a]/80 hover:bg-white/5 text-[9px] font-black text-white/40 hover:text-white rounded-2xl border border-white/5 transition-all uppercase tracking-widest active:scale-[0.98]"
                             >
                                 Reset View
                             </button>
                             <button
                                 onClick={handleMapToggle}
-                                className="p-3.5 bg-[#0a0a0a]/80 hover:bg-white/5 text-white/40 hover:text-white rounded-2xl border border-white/5 transition-all flex items-center justify-center group active:scale-[0.98]"
+                                className="p-3.5 bg-[#0a0a0a]/80 hover:bg-white/5 text-white/40 hover:text-white rounded-2xl border border-white/5 transition-all flex items-center justify-center group active:scale-[0.98] shadow-2xl"
                                 title="Map Layers"
                             >
                                 <MapIcon size={20} className="group-hover:text-blue-500 transition-colors" />
                             </button>
                             <button
                                 onClick={handleShare}
-                                className="p-3.5 bg-[#0a0a0a]/80 hover:bg-white/5 text-white/40 hover:text-white rounded-2xl border border-white/5 transition-all flex items-center justify-center group active:scale-[0.98]"
+                                className="p-3.5 bg-[#0a0a0a]/80 hover:bg-white/5 text-white/40 hover:text-white rounded-2xl border border-white/5 transition-all flex items-center justify-center group active:scale-[0.98] shadow-2xl"
                                 title="Share Node"
                             >
                                 <Share2 size={20} className="group-hover:text-blue-500 transition-colors" />
@@ -224,7 +268,7 @@ export default function MappingClient({ campuses }: { campuses: Campus[] }) {
                             <div className="p-8 bg-white/[0.02] border border-white/[0.05] rounded-full">
                                 <Package className="w-20 h-20 text-white/5" />
                             </div>
-                            <p className="text-xs font-black text-white/10 uppercase tracking-[0.8em]">Select node for deep analysis</p>
+                            <p className="text-xs font-black text-white/10 uppercase tracking-[0.8em]">Select node for analysis</p>
                         </div>
                     )}
                 </div>
