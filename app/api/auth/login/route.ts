@@ -22,8 +22,13 @@ export async function POST(req: NextRequest) {
 
         const { email, password } = result.data;
 
-        // Find user by email
-        const user = db.prepare("SELECT * FROM User WHERE email = ?").get(email) as any;
+        // Find user by email using Turso async call
+        const userResult = await db.execute({
+            sql: "SELECT * FROM User WHERE email = ?",
+            args: [email]
+        });
+
+        const user = userResult.rows[0] as any;
 
         if (!user) {
             return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
