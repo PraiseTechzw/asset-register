@@ -8,7 +8,8 @@ export async function GET(req: NextRequest) {
         const user = await getUserFromRequest(req);
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const departments = db.prepare(`SELECT * FROM Department ORDER BY name ASC`).all() as any[];
+        const departmentsRes = await db.execute(`SELECT * FROM Department ORDER BY name ASC`);
+        const departments = departmentsRes.rows as any[];
 
         return NextResponse.json({ departments }, { status: 200 });
     } catch (error) {
@@ -30,17 +31,24 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Department name is required" }, { status: 400 });
         }
 
-        const existingDept = db.prepare("SELECT id FROM Department WHERE name = ?").get(name);
+        const existingDeptRes = await db.execute({
+            sql: "SELECT id FROM Department WHERE name = ?",
+            args: [name]
+        });
+        const existingDept = existingDeptRes.rows[0];
         if (existingDept) {
             return NextResponse.json({ error: "Department already exists" }, { status: 400 });
         }
 
         const id = crypto.randomUUID();
 
-        db.prepare(`
-            INSERT INTO Department (id, name)
-            VALUES (?, ?)
-        `).run(id, name);
+        await db.execute({
+            sql: `
+                INSERT INTO Department (id, name)
+                VALUES (?, ?)
+            `,
+            args: [id, name]
+        });
 
         return NextResponse.json({ message: "Department created successfully", department: { id, name } }, { status: 201 });
     } catch (error) {

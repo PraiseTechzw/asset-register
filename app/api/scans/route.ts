@@ -28,12 +28,16 @@ export async function POST(req: NextRequest) {
 
         const { qrCodeHash, latitude, longitude, address } = result.data;
 
-        const asset = db.prepare(`
-            SELECT a.*, d.name as departmentName
-            FROM Asset a
-            LEFT JOIN Department d ON a.currentDepartmentId = d.id
-            WHERE a.qrCodeHash = ?
-        `).get(qrCodeHash) as any;
+        const assetResult = await db.execute({
+            sql: `
+                SELECT a.*, d.name as departmentName
+                FROM Asset a
+                LEFT JOIN Department d ON a.currentDepartmentId = d.id
+                WHERE a.qrCodeHash = ?
+            `,
+            args: [qrCodeHash]
+        });
+        const asset = assetResult.rows[0] as any;
 
         if (!asset) {
             // Log failed scan attempt
@@ -51,10 +55,13 @@ export async function POST(req: NextRequest) {
 
         // Record the location if provided
         if (latitude && longitude) {
-            db.prepare(`
-                INSERT INTO AssetLocation (id, assetId, latitude, longitude, address, recordedById)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `).run(crypto.randomUUID(), asset.id, latitude, longitude, address || null, user.userId);
+            await db.execute({
+                sql: `
+                    INSERT INTO AssetLocation (id, assetId, latitude, longitude, address, recordedById)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `,
+                args: [crypto.randomUUID(), asset.id, latitude, longitude, address || null, user.userId]
+            });
         }
 
         // Log the successful scan verification

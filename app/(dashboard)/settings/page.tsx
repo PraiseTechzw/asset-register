@@ -260,11 +260,11 @@ function SettingsContent() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-500">Storage Engine</span>
-                                <span className="font-mono text-amber-500">better-sqlite3</span>
+                                <span className="font-mono text-blue-500">Turso (libsql)</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-500">Sync Status</span>
-                                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">OFFLINE READY</span>
+                                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded border border-blue-500/20 shadow-[0_0_10px_rgba(37,99,235,0.2)]">CLOUD SYNCED</span>
                             </div>
                             <button
                                 onClick={handleExportBackup}

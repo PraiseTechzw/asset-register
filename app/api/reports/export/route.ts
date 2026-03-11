@@ -8,11 +8,12 @@ export async function GET(req: NextRequest) {
         const roleError = requireRole(user, [ROLES.SUPER_ADMIN, ROLES.AUDITOR, ROLES.DEPT_OFFICER]);
         if (roleError) return roleError;
 
-        const assets = db.prepare(`
+        const assetsRes = await db.execute(`
             SELECT a.id, a.name, a.category, d.name as department, a.status, a.condition, a.purchasePrice, a.purchaseDate
             FROM Asset a
             LEFT JOIN Department d ON a.currentDepartmentId = d.id
-        `).all() as any[];
+        `);
+        const assets = assetsRes.rows as any[];
 
         const csvRows = [
             ["ID", "Name", "Category", "Department", "Status", "Condition", "Purchase Price", "Purchase Date"].join(",")

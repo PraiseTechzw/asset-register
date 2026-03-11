@@ -10,12 +10,13 @@ export async function GET(req: NextRequest) {
         const roleError = requireRole(user, [ROLES.SUPER_ADMIN]);
         if (roleError) return roleError;
 
-        const users = db.prepare(`
+        const usersRes = await db.execute(`
             SELECT u.id, u.name, u.email, u.role, u.departmentId, d.name as deptName 
             FROM User u 
             LEFT JOIN Department d ON u.departmentId = d.id
             ORDER BY u.name ASC
-        `).all() as any[];
+        `);
+        const users = usersRes.rows as any[];
 
         return NextResponse.json({ users }, { status: 200 });
     } catch (error) {
@@ -37,7 +38,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        const existingUser = db.prepare("SELECT id FROM User WHERE email = ?").get(email);
+        const existingUserRes = await db.execute({
+            sql: "SELECT id FROM User WHERE email = ?",
+            args: [email]
+        });
+        const existingUser = existingUserRes.rows[0];
         if (existingUser) {
             return NextResponse.json({ error: "Email already exists" }, { status: 400 });
         }
@@ -45,10 +50,13 @@ export async function POST(req: NextRequest) {
         const passwordHash = await bcrypt.hash(password, 10);
         const id = crypto.randomUUID();
 
-        db.prepare(`
-            INSERT INTO User (id, email, passwordHash, name, role, departmentId)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `).run(id, email, passwordHash, name, role, departmentId || null);
+        await db.execute({
+            sql: `
+                INSERT INTO User (id, email, passwordHash, name, role, departmentId)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `,
+            args: [id, email, passwordHash, name, role, departmentId || null]
+        });
 
         return NextResponse.json({ message: "User created successfully", user: { id, name, email, role } }, { status: 201 });
     } catch (error) {

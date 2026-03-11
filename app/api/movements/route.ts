@@ -26,7 +26,11 @@ export async function POST(req: NextRequest) {
 
         const { assetId, toDepartmentId, notes } = result.data;
 
-        const asset = db.prepare("SELECT * FROM Asset WHERE id = ?").get(assetId) as any;
+        const assetRes = await db.execute({
+            sql: "SELECT * FROM Asset WHERE id = ?",
+            args: [assetId]
+        });
+        const asset = assetRes.rows[0] as any;
         if (!asset) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
 
         if (user.role === ROLES.DEPT_OFFICER && asset.currentDepartmentId !== user.departmentId) {
@@ -37,16 +41,27 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Asset is already in this department" }, { status: 400 });
         }
 
-        const toDepartment = db.prepare("SELECT * FROM Department WHERE id = ?").get(toDepartmentId);
+        const toDeptRes = await db.execute({
+            sql: "SELECT * FROM Department WHERE id = ?",
+            args: [toDepartmentId]
+        });
+        const toDepartment = toDeptRes.rows[0];
         if (!toDepartment) return NextResponse.json({ error: "Destination department not found" }, { status: 404 });
 
         const movementId = crypto.randomUUID();
-        db.prepare(`
-            INSERT INTO AssetMovement (id, assetId, fromDepartmentId, toDepartmentId, requestedById, status, notes)
-            VALUES (?, ?, ?, ?, ?, 'PENDING', ?)
-        `).run(movementId, assetId, asset.currentDepartmentId, toDepartmentId, user.userId, notes || null);
+        await db.execute({
+            sql: `
+                INSERT INTO AssetMovement (id, assetId, fromDepartmentId, toDepartmentId, requestedById, status, notes)
+                VALUES (?, ?, ?, ?, ?, 'PENDING', ?)
+            `,
+            args: [movementId, assetId, asset.currentDepartmentId, toDepartmentId, user.userId, notes || null]
+        });
 
-        const movement = db.prepare("SELECT * FROM AssetMovement WHERE id = ?").get(movementId);
+        const movementRes = await db.execute({
+            sql: "SELECT * FROM AssetMovement WHERE id = ?",
+            args: [movementId]
+        });
+        const movement = movementRes.rows[0];
 
         await logActivity({
             action: "MOVEMENT_REQUESTED",
@@ -103,7 +118,11 @@ export async function GET(req: NextRequest) {
 
         query += " ORDER BY m.createdAt DESC";
 
-        const movements = db.prepare(query).all(...params);
+        const movementRes = await db.execute({
+            sql: query,
+            args: params
+        });
+        const movements = movementRes.rows;
 
         return NextResponse.json(movements, { status: 200 });
 

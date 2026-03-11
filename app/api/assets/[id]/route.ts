@@ -21,20 +21,27 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { id } = await params;
-        const asset = db.prepare(`
-            SELECT a.*, d.name as departmentName, u.name as assignedUserName, v.method, v.rate, v.currentBookValue
-            FROM Asset a
-            LEFT JOIN Department d ON a.currentDepartmentId = d.id
-            LEFT JOIN User u ON a.assignedUserId = u.id
-            LEFT JOIN Valuation v ON v.assetId = a.id
-            WHERE a.id = ?
-        `).get(id) as any;
+        const assetResult = await db.execute({
+            sql: `
+                SELECT a.*, d.name as departmentName, u.name as assignedUserName, v.method, v.rate, v.currentBookValue
+                FROM Asset a
+                LEFT JOIN Department d ON a.currentDepartmentId = d.id
+                LEFT JOIN User u ON a.assignedUserId = u.id
+                LEFT JOIN Valuation v ON v.assetId = a.id
+                WHERE a.id = ?
+            `,
+            args: [id]
+        });
+        const asset = assetResult.rows[0] as any;
 
         if (!asset) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
 
         // Add dummy locations for now if needed or fetch them
-        const locations = db.prepare("SELECT * FROM AssetLocation WHERE assetId = ? ORDER BY recordedAt DESC LIMIT 5").all(id);
-        asset.locations = locations;
+        const locationsResult = await db.execute({
+            sql: "SELECT * FROM AssetLocation WHERE assetId = ? ORDER BY recordedAt DESC LIMIT 5",
+            args: [id]
+        });
+        asset.locations = locationsResult.rows;
 
         // Check if DEPT_OFFICER can view
         if (user.role === ROLES.DEPT_OFFICER && asset.currentDepartmentId !== user.departmentId) {
@@ -57,7 +64,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         const { id } = await params;
 
         // Dept Officers can only update their own department's assets
-        const existingAsset = db.prepare("SELECT * FROM Asset WHERE id = ?").get(id) as any;
+        const existingAssetResult = await db.execute({
+            sql: "SELECT * FROM Asset WHERE id = ?",
+            args: [id]
+        });
+        const existingAsset = existingAssetResult.rows[0] as any;
         if (!existingAsset) return NextResponse.json({ error: "Asset not found" }, { status: 404 });
 
         if (user!.role === ROLES.DEPT_OFFICER && existingAsset.currentDepartmentId !== user!.departmentId) {
@@ -82,10 +93,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (keys.length > 0) {
             const setClause = keys.map(k => `${k} = ?`).join(", ");
             const values = keys.map(k => (updateData as any)[k]);
-            db.prepare(`UPDATE Asset SET ${setClause}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`).run(...values, id);
+            await db.execute({
+                sql: `UPDATE Asset SET ${setClause}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+                args: [...values, id]
+            });
         }
 
-        const updatedAsset = db.prepare("SELECT * FROM Asset WHERE id = ?").get(id);
+        const updatedAssetResult = await db.execute({
+            sql: "SELECT * FROM Asset WHERE id = ?",
+            args: [id]
+        });
+        const updatedAsset = updatedAssetResult.rows[0];
 
         await logActivity({
             action: "ASSET_UPDATED",

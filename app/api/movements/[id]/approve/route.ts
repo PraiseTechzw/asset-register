@@ -15,7 +15,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Invalid status" }, { status: 400 });
         }
 
-        const movement = db.prepare("SELECT * FROM AssetMovement WHERE id = ?").get(id) as any;
+        const movementResult = await db.execute({
+            sql: "SELECT * FROM AssetMovement WHERE id = ?",
+            args: [id]
+        });
+        const movement = movementResult.rows[0] as any;
 
         if (!movement) return NextResponse.json({ error: "Movement request not found" }, { status: 404 });
         if (movement.status !== "PENDING") {
@@ -32,17 +36,27 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Forbidden: You cannot approve this movement" }, { status: 403 });
         }
 
-        const updatedMovement = db.transaction(() => {
-            db.prepare("UPDATE AssetMovement SET status = ?, approvedById = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?")
-                .run(status, user.userId, id);
-
-            if (status === "APPROVED") {
-                db.prepare("UPDATE Asset SET currentDepartmentId = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?")
-                    .run(movement.toDepartmentId, movement.assetId);
+        const batch: any[] = [
+            {
+                sql: "UPDATE AssetMovement SET status = ?, approvedById = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+                args: [status, user.userId, id]
             }
+        ];
 
-            return db.prepare("SELECT * FROM AssetMovement WHERE id = ?").get(id);
-        })();
+        if (status === "APPROVED") {
+            batch.push({
+                sql: "UPDATE Asset SET currentDepartmentId = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+                args: [movement.toDepartmentId, movement.assetId]
+            });
+        }
+
+        await db.batch(batch, "write");
+
+        const updatedMovementRes = await db.execute({
+            sql: "SELECT * FROM AssetMovement WHERE id = ?",
+            args: [id]
+        });
+        const updatedMovement = updatedMovementRes.rows[0];
 
         await logActivity({
             action: status === "APPROVED" ? "MOVEMENT_APPROVED" : "MOVEMENT_REJECTED",

@@ -9,9 +9,14 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const departments = db.prepare("SELECT id, name FROM Department ORDER BY name ASC").all();
-        const categories = db.prepare("SELECT DISTINCT category FROM Asset").all();
-        const users = db.prepare("SELECT id, name, role, departmentId FROM User ORDER BY name ASC").all();
+        const departmentsRes = await db.execute("SELECT id, name FROM Department ORDER BY name ASC");
+        const departments = departmentsRes.rows;
+
+        const categoriesRes = await db.execute("SELECT DISTINCT category FROM Asset");
+        const categories = categoriesRes.rows;
+
+        const usersRes = await db.execute("SELECT id, name, role, departmentId FROM User ORDER BY name ASC");
+        const users = usersRes.rows;
 
         return NextResponse.json({ departments, categories, users });
     } catch (error) {

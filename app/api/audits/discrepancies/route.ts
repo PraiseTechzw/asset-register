@@ -17,34 +17,40 @@ export async function GET(req: NextRequest) {
         const thresholdISO = thresholdDate.toISOString();
 
         // 1. Find assets that have never been scanned or haven't been scanned recently
-        const unscannedAssets = db.prepare(`
-            SELECT a.*, d.name as departmentName
-            FROM Asset a
-            LEFT JOIN Department d ON a.currentDepartmentId = d.id
-            WHERE a.status = 'ACTIVE' 
-            AND a.id NOT IN (
-                SELECT entityId FROM AuditLog 
-                WHERE action = 'QR_SCANNED' 
-                AND entityType = 'ASSET' 
-                AND timestamp >= ?
-            )
-        `).all(thresholdISO) as any[];
+        const unscannedAssetsRes = await db.execute({
+            sql: `
+                SELECT a.*, d.name as departmentName
+                FROM Asset a
+                LEFT JOIN Department d ON a.currentDepartmentId = d.id
+                WHERE a.status = 'ACTIVE' 
+                AND a.id NOT IN (
+                    SELECT entityId FROM AuditLog 
+                    WHERE action = 'QR_SCANNED' 
+                    AND entityType = 'ASSET' 
+                    AND timestamp >= ?
+                )
+            `,
+            args: [thresholdISO]
+        });
+        const unscannedAssets = unscannedAssetsRes.rows as any[];
 
         // 2. Find assets explicitly marked as MISSING
-        const missingAssets = db.prepare(`
+        const missingAssetsRes = await db.execute(`
             SELECT a.*, d.name as departmentName
             FROM Asset a
             LEFT JOIN Department d ON a.currentDepartmentId = d.id
             WHERE a.status = 'MISSING'
-        `).all() as any[];
+        `);
+        const missingAssets = missingAssetsRes.rows as any[];
 
         // 3. Find assets in conditions POOR or SCRAP but still ACTIVE
-        const conditionDiscrepancies = db.prepare(`
+        const conditionDiscrepanciesRes = await db.execute(`
             SELECT a.*, d.name as departmentName
             FROM Asset a
             LEFT JOIN Department d ON a.currentDepartmentId = d.id
             WHERE a.status = 'ACTIVE' AND a.condition IN ('POOR', 'SCRAP')
-        `).all() as any[];
+        `);
+        const conditionDiscrepancies = conditionDiscrepanciesRes.rows as any[];
 
         return NextResponse.json({
             discrepancies: {
