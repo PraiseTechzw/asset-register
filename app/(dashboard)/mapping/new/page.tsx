@@ -12,10 +12,13 @@ export default async function NewCampusPage() {
 
         const id = `campus-${Math.random().toString(36).substr(2, 5)}`;
 
-        db.prepare(`
-      INSERT INTO Campus (id, name, location, coordinates)
-      VALUES (?, ?, ?, ?)
-    `).run(id, name, location, coordinates);
+        await db.execute({
+            sql: `
+                INSERT INTO Campus (id, name, location, coordinates)
+                VALUES (?, ?, ?, ?)
+            `,
+            args: [id, name, location, coordinates]
+        });
 
         redirect("/mapping");
     }

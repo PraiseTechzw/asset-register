@@ -14,13 +14,17 @@ export default async function AssetDetailPage({
 }) {
     const { id } = await params;
 
-    const asset = db.prepare(`
-        SELECT a.*, d.name as departmentName, v.method, v.rate, v.currentBookValue, v.accumulatedDepreciation
-        FROM Asset a
-        LEFT JOIN Department d ON a.currentDepartmentId = d.id
-        LEFT JOIN Valuation v ON v.assetId = a.id
-        WHERE a.id = ?
-    `).get(id) as any;
+    const assetResult = await db.execute({
+        sql: `
+            SELECT a.*, d.name as departmentName, v.method, v.rate, v.currentBookValue, v.accumulatedDepreciation
+            FROM Asset a
+            LEFT JOIN Department d ON a.currentDepartmentId = d.id
+            LEFT JOIN Valuation v ON v.assetId = a.id
+            WHERE a.id = ?
+        `,
+        args: [id]
+    });
+    const asset = assetResult.rows[0] as any;
 
     if (!asset) return notFound();
 
@@ -47,15 +51,19 @@ export default async function AssetDetailPage({
     asset.currentBookValue = currentBookValue;
     asset.accumulatedDepreciation = accumulatedDepreciation;
 
-    const movements = db.prepare(`
-        SELECT m.*, fd.name as fromDept, td.name as toDept, ru.name as requestedBy
-        FROM AssetMovement m
-        LEFT JOIN Department fd ON m.fromDepartmentId = fd.id
-        LEFT JOIN Department td ON m.toDepartmentId = td.id
-        LEFT JOIN User ru ON m.requestedById = ru.id
-        WHERE m.assetId = ?
-        ORDER BY m.createdAt DESC
-    `).all(id) as any[];
+    const movementsResult = await db.execute({
+        sql: `
+            SELECT m.*, fd.name as fromDept, td.name as toDept, ru.name as requestedBy
+            FROM AssetMovement m
+            LEFT JOIN Department fd ON m.fromDepartmentId = fd.id
+            LEFT JOIN Department td ON m.toDepartmentId = td.id
+            LEFT JOIN User ru ON m.requestedById = ru.id
+            WHERE m.assetId = ?
+            ORDER BY m.createdAt DESC
+        `,
+        args: [id]
+    });
+    const movements = movementsResult.rows as any[];
 
     // Map movements to timeline format
     const timelineEvents: Array<{ id: string; title: string; description: string; time: string; status: 'completed' | 'pending' | 'failed' | 'current' }> = movements.map(m => ({

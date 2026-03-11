@@ -8,7 +8,7 @@ export default async function TransfersPage() {
     // This is a server component, we should handle auth via headers (since it's a page)
     // For simplicity, we'll assume the user is authorized for now or redirect
 
-    const movements = db.prepare(`
+    const movementsResult = await db.execute(`
         SELECT m.*, a.name as assetName, fd.name as fromDept, td.name as toDept, ru.name as requestedBy
         FROM AssetMovement m
         JOIN Asset a ON m.assetId = a.id
@@ -16,7 +16,8 @@ export default async function TransfersPage() {
         JOIN Department td ON m.toDepartmentId = td.id
         JOIN User ru ON m.requestedById = ru.id
         ORDER BY m.createdAt DESC
-    `).all() as any[];
+    `);
+    const movements = movementsResult.rows as any[];
 
     return (
         <div className="space-y-6">

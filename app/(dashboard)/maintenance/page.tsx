@@ -3,12 +3,13 @@ import { Wrench, Calendar, CheckCircle, Clock, AlertTriangle, ChevronRight } fro
 import Link from "next/link";
 
 export default async function MaintenancePage() {
-    const jobs = db.prepare(`
+    const jobsResult = await db.execute(`
     SELECT m.*, a.name as assetName, a.serialNumber
     FROM MaintenanceJob m
     JOIN Asset a ON m.assetId = a.id
     ORDER BY m.scheduledDate ASC
-  `).all() as any[];
+  `);
+    const jobs = jobsResult.rows as any[];
 
     const stats = {
         pending: jobs.filter(j => j.status === 'SCHEDULED' && new Date(j.scheduledDate) > new Date()).length,

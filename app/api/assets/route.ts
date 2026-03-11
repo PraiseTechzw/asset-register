@@ -35,29 +35,41 @@ export async function POST(req: NextRequest) {
         const data = result.data;
 
         // Check for duplicate serial number
-        const existing = db.prepare("SELECT id FROM Asset WHERE serialNumber = ?").get(data.serialNumber);
+        const existingResult = await db.execute({
+            sql: "SELECT id FROM Asset WHERE serialNumber = ?",
+            args: [data.serialNumber]
+        });
+        const existing = existingResult.rows[0];
         if (existing) {
             return NextResponse.json({ error: "Serial number already registered" }, { status: 409 });
         }
 
         const qrCodeHash = crypto.randomBytes(16).toString("hex");
         const assetId = crypto.randomUUID();
+        const valuationId = crypto.randomUUID();
 
-        const createAsset = db.transaction(() => {
-            db.prepare(`
-                INSERT INTO Asset (id, name, serialNumber, description, category, purchaseDate, purchasePrice, currentDepartmentId, assignedTo, condition, qrCodeHash, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
-            `).run(assetId, data.name, data.serialNumber, data.description || null, data.category, data.purchaseDate, data.purchasePrice, data.currentDepartmentId || null, data.assignedTo || null, data.condition || "GOOD", qrCodeHash);
+        await db.batch([
+            {
+                sql: `
+                    INSERT INTO Asset (id, name, serialNumber, description, category, purchaseDate, purchasePrice, currentDepartmentId, assignedTo, condition, qrCodeHash, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
+                `,
+                args: [assetId, data.name, data.serialNumber, data.description || null, data.category, data.purchaseDate, data.purchasePrice, data.currentDepartmentId || null, data.assignedTo || null, data.condition || "GOOD", qrCodeHash]
+            },
+            {
+                sql: `
+                    INSERT INTO Valuation (id, assetId, method, rate, accumulatedDepreciation, currentBookValue)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `,
+                args: [valuationId, assetId, data.valuationMethod || "STRAIGHT_LINE", data.valuationRate || 5, 0, data.purchasePrice]
+            }
+        ], "write");
 
-            db.prepare(`
-                INSERT INTO Valuation (id, assetId, method, rate, accumulatedDepreciation, currentBookValue)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `).run(crypto.randomUUID(), assetId, data.valuationMethod || "STRAIGHT_LINE", data.valuationRate || 5, 0, data.purchasePrice);
-
-            return db.prepare("SELECT * FROM Asset WHERE id = ?").get(assetId) as any;
+        const newAssetResult = await db.execute({
+            sql: "SELECT * FROM Asset WHERE id = ?",
+            args: [assetId]
         });
-
-        const newAsset = createAsset();
+        const newAsset = newAssetResult.rows[0] as any;
 
         await logActivity({
             action: "ASSET_CREATED",
@@ -116,7 +128,11 @@ export async function GET(req: NextRequest) {
 
         query += " ORDER BY a.createdAt DESC";
 
-        const assets = db.prepare(query).all(...params);
+        const assetsResult = await db.execute({
+            sql: query,
+            args: params
+        });
+        const assets = assetsResult.rows;
 
         return NextResponse.json(assets, { status: 200 });
     } catch (error) {

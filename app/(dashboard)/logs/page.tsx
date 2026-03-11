@@ -23,7 +23,11 @@ export default async function LogsPage({
 
     query += ` ORDER BY l.timestamp DESC LIMIT 100`;
 
-    const logs = db.prepare(query).all(...sqlParams) as any[];
+    const logsResult = await db.execute({
+        sql: query,
+        args: sqlParams
+    });
+    const logs = logsResult.rows as any[];
 
     return (
         <div className="space-y-6">

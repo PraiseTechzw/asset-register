@@ -51,8 +51,14 @@ export default async function AssetsPage({
 
     query += " ORDER BY a.createdAt DESC";
 
-    const assets = db.prepare(query).all(...sqlParams) as any[];
-    const categoryRows = db.prepare("SELECT DISTINCT category FROM Asset").all() as { category: string }[];
+    const assetsResult = await db.execute({
+        sql: query,
+        args: sqlParams
+    });
+    const assets = assetsResult.rows as any[];
+
+    const categoryRowsResult = await db.execute("SELECT DISTINCT category FROM Asset");
+    const categoryRows = categoryRowsResult.rows as unknown as { category: string }[];
     const categories = categoryRows.map(r => r.category);
 
     return (

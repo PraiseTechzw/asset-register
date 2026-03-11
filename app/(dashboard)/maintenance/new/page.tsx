@@ -4,7 +4,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function NewMaintenancePage() {
-    const assets = db.prepare("SELECT id, name, serialNumber FROM Asset").all() as any[];
+    const assetsResult = await db.execute("SELECT id, name, serialNumber FROM Asset");
+    const assets = assetsResult.rows as any[];
 
     async function createJob(formData: FormData) {
         "use server";
@@ -15,10 +16,13 @@ export default async function NewMaintenancePage() {
 
         const id = `maint-${Math.random().toString(36).substr(2, 9)}`;
 
-        db.prepare(`
-      INSERT INTO MaintenanceJob (id, assetId, type, status, scheduledDate, notes, createdById)
-      VALUES (?, ?, ?, 'SCHEDULED', ?, ?, 'user-admin')
-    `).run(id, assetId, type, scheduledDate, notes);
+        await db.execute({
+            sql: `
+                INSERT INTO MaintenanceJob (id, assetId, type, status, scheduledDate, notes, createdById)
+                VALUES (?, ?, ?, 'SCHEDULED', ?, ?, 'user-admin')
+            `,
+            args: [id, assetId, type, scheduledDate, notes]
+        });
 
         redirect("/maintenance");
     }

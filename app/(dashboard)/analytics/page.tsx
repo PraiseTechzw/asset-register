@@ -5,21 +5,23 @@ import { DepreciationArea, ReplacementBar } from '@/components/AnalyticsCharts';
 
 export default async function AnalyticsPage() {
     // 1. Current Total Value (Sum of Current Book Values)
-    const metrics = db.prepare(`
+    const metricsResult = await db.execute(`
         SELECT 
             SUM(v.currentBookValue) as totalValue,
             SUM(v.accumulatedDepreciation) as totalDepreciation,
             COUNT(*) as assetCount
         FROM Valuation v
-    `).get() as any;
+    `);
+    const metrics = metricsResult.rows[0] as any;
 
     // 2. Replacement Forecast (Assets with condition POOR or life ending soon)
-    const replacementList = db.prepare(`
+    const replacementListResult = await db.execute(`
         SELECT category, SUM(purchasePrice) as cost
         FROM Asset
         WHERE condition IN ('POOR', 'SCRAP', 'FAIR') OR status = 'MISSING'
         GROUP BY category
-    `).all() as any[];
+    `);
+    const replacementList = replacementListResult.rows as any[];
 
     // 3. Depreciation Curve (Simulated based on real data for next 5 years)
     const currentVal = metrics.totalValue || 0;
