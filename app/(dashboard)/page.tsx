@@ -7,16 +7,21 @@ import Link from 'next/link';
 
 export default async function Home() {
   // 1. Fetch Key Metrics
-  const valuations = db.prepare('SELECT currentBookValue FROM Valuation').all() as { currentBookValue: number }[];
-  const totalValue = valuations.reduce((acc, v) => acc + v.currentBookValue, 0);
+  const valuationsResult = await db.execute('SELECT currentBookValue FROM Valuation');
+  const valuations = valuationsResult.rows as unknown as { currentBookValue: number }[];
+  const totalValue = valuations.reduce((acc, v) => acc + Number(v.currentBookValue), 0);
 
-  const activeCount = (db.prepare("SELECT COUNT(*) as count FROM Asset WHERE status = 'ACTIVE'").get() as any).count;
+  const activeCountResult = await db.execute("SELECT COUNT(*) as count FROM Asset WHERE status = 'ACTIVE'");
+  const activeCount = Number(activeCountResult.rows[0].count);
 
-  const pendingAudits = (db.prepare("SELECT COUNT(*) as count FROM Asset WHERE status = 'MISSING' OR condition = 'POOR'").get() as any).count;
+  const pendingAuditsResult = await db.execute("SELECT COUNT(*) as count FROM Asset WHERE status = 'MISSING' OR condition = 'POOR'");
+  const pendingAudits = Number(pendingAuditsResult.rows[0].count);
 
-  const totalCount = (db.prepare("SELECT COUNT(*) as count FROM Asset").get() as any).count;
+  const totalCountResult = await db.execute("SELECT COUNT(*) as count FROM Asset");
+  const totalCount = Number(totalCountResult.rows[0].count);
 
-  const verifiedCount = (db.prepare("SELECT COUNT(*) as count FROM Asset WHERE condition IN ('EXCELLENT', 'GOOD')").get() as any).count;
+  const verifiedCountResult = await db.execute("SELECT COUNT(*) as count FROM Asset WHERE condition IN ('EXCELLENT', 'GOOD')");
+  const verifiedCount = Number(verifiedCountResult.rows[0].count);
 
   const verifiedPercent = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 0;
 
@@ -29,10 +34,15 @@ export default async function Home() {
   }).format(totalValue);
 
   // 3. Fetch Department Stats
-  const departments = db.prepare('SELECT * FROM Department').all() as any[];
+  const departmentsResult = await db.execute('SELECT * FROM Department');
+  const departments = departmentsResult.rows as any[];
 
-  const deptStats = departments.map(d => {
-    const assets = db.prepare('SELECT status, condition FROM Asset WHERE currentDepartmentId = ?').all(d.id) as any[];
+  const deptStats = await Promise.all(departments.map(async (d) => {
+    const assetsResult = await db.execute({
+        sql: 'SELECT status, condition FROM Asset WHERE currentDepartmentId = ?',
+        args: [d.id]
+    });
+    const assets = assetsResult.rows as any[];
     const total = assets.length;
     const issues = assets.filter(a => a.status === 'MISSING' || a.condition === 'POOR' || a.condition === 'SCRAP').length;
     return {
@@ -40,27 +50,29 @@ export default async function Home() {
       assets: total,
       issueRate: total > 0 ? Math.round((issues / total) * 100) : 0
     };
-  });
+  }));
 
   // 4. Fetch Missing Assets
-  const missingDbAssets = db.prepare(`
+  const missingDbAssetsResult = await db.execute(`
     SELECT a.*, d.name as deptName 
     FROM Asset a 
     LEFT JOIN Department d ON a.currentDepartmentId = d.id 
     WHERE a.status = 'MISSING' 
     ORDER BY a.updatedAt DESC 
     LIMIT 5
-  `).all() as any[];
+  `);
+  const missingDbAssets = missingDbAssetsResult.rows as any[];
 
   const missingAssets = missingDbAssets.map(a => {
-    const updatedDate = new Date(a.updatedAt);
+    const updatedAtValue = a.updatedAt as string;
+    const updatedDate = new Date(updatedAtValue);
     const diffDays = Math.floor((new Date().getTime() - updatedDate.getTime()) / (1000 * 3600 * 24));
     let lastSeenText = diffDays === 0 ? 'Today' : `${diffDays} days ago`;
 
     return {
-      id: a.id,
-      name: a.name,
-      dept: a.deptName || 'Unknown',
+      id: a.id as string,
+      name: a.name as string,
+      dept: (a.deptName || 'Unknown') as string,
       lastSeen: lastSeenText
     };
   });

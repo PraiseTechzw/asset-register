@@ -21,10 +21,12 @@ export async function logActivity({ action, entityType, entityId, userId, detail
             ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
         }
 
-        db.prepare(`
-          INSERT INTO AuditLog (id, action, entityType, entityId, userId, details, ipAddress, timestamp)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
+        await db.execute({
+          sql: `
+            INSERT INTO AuditLog (id, action, entityType, entityId, userId, details, ipAddress, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          args: [
             crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)),
             action,
             entityType,
@@ -33,7 +35,8 @@ export async function logActivity({ action, entityType, entityId, userId, detail
             JSON.stringify(details),
             ipAddress,
             new Date().toISOString()
-        );
+          ]
+        });
     } catch (error) {
         console.error("Failed to write audit log:", error);
         // Do not throw, as logging should not break the main operation
