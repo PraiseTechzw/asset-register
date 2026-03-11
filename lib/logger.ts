@@ -1,5 +1,6 @@
 import db from "./db";
 import { NextRequest } from "next/server";
+import crypto from "crypto";
 
 export interface LogParams {
     action: string;
@@ -27,7 +28,7 @@ export async function logActivity({ action, entityType, entityId, userId, detail
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `,
           args: [
-            crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)),
+            crypto.randomUUID(),
             action,
             entityType,
             entityId,
