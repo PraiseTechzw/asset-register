@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-in-production";
 
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+    console.error("CRITICAL: JWT_SECRET is not set in production environment!");
+    // In some environments, throwing here might crash the build, 
+    // but it's better than running with a default key.
+}
+
 export interface JwtPayload {
     userId: string;
     role: string;

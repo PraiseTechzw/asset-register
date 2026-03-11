@@ -1,20 +1,28 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { createClient } from "@libsql/client";
 
-// Local SQL file (Offline-ready)
-const DB_PATH = path.resolve(process.cwd(), 'local.db');
+const url = process.env.DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+if (!url) {
+  throw new Error("DATABASE_URL is not defined in environment variables");
+}
 
-// Initialize Schema
-export function initDb() {
-  db.exec(`
+const db = createClient({
+  url: url,
+  authToken: authToken,
+});
+
+/**
+ * Initialize Schema on Turso (Remote)
+ * This is meant to be run once or as a migration.
+ */
+export async function initDb() {
+  const schema = `
     CREATE TABLE IF NOT EXISTS Campus (
       id TEXT PRIMARY KEY,
       name TEXT UNIQUE NOT NULL,
       location TEXT,
-      coordinates TEXT, -- Format: "lat,lng"
+      coordinates TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -138,24 +146,23 @@ export function initDb() {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES User(id)
     );
-  `);
-
-  // Migration: Add serialNumber if it doesn't exist
-  try {
-    db.exec("ALTER TABLE Asset ADD COLUMN serialNumber TEXT");
-    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_serial ON Asset(serialNumber)");
-  } catch (e) { }
+  `;
 
   try {
-    db.exec("ALTER TABLE Asset ADD COLUMN assignedTo TEXT");
-  } catch (e) { }
-
-  try {
-    db.exec("ALTER TABLE Department ADD COLUMN campusId TEXT");
-  } catch (e) { }
+    // split by semicolon and filter empty lines to run each statement
+    const statements = schema
+      .split(";")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    
+    for (const statement of statements) {
+      await db.execute(statement);
+    }
+    
+    console.log("Turso Schema Initialized Successfully");
+  } catch (error) {
+    console.error("Turso Schema Initialization Failed:", error);
+  }
 }
-
-// Initial Call
-initDb();
 
 export default db;
